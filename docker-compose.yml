@@ -19,7 +19,8 @@ services:
       HOME: /home/pzagent
     volumes:
       - ${HOME}/.pzagent/authorized_keys:/home/pzagent/.ssh/authorized_keys:ro
-      - ${HOME}/.local/share/opencode/auth.json:/home/pzagent/.local/share/opencode/auth.json:ro
+      # OpenCode OAuth credentials must be writable so refresh tokens can be rotated.
+      - ${HOME}/.local/share/opencode/auth.json:/home/pzagent/.local/share/opencode/auth.json
       - ${HOME}/pzagent_work:/workspace
     working_dir: /workspace
     init: true

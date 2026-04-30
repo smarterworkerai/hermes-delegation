@@ -50,6 +50,11 @@ fi
 
 if [[ -f /home/pzagent/.local/share/opencode/auth.json ]]; then
   echo "OpenCode auth.json mounted." >&2
+  if [[ -w /home/pzagent/.local/share/opencode/auth.json ]]; then
+    echo "OpenCode auth.json is writable for token refresh." >&2
+  else
+    echo "WARNING: OpenCode auth.json is not writable. OAuth token refresh may fail; mount auth.json read-write." >&2
+  fi
 else
   echo "WARNING: OpenCode auth.json is missing at /home/pzagent/.local/share/opencode/auth.json." >&2
 fi

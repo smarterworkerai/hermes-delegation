@@ -40,14 +40,16 @@ docker compose exec hermes-worker sshd -T | grep -E 'passwordauthentication|kbdi
 The host file must exist:
 
 ```bash
-test -f ~/.local/share/opencode/auth.json && echo ok
+test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok
 ```
 
 Inside the worker:
 
 ```bash
-ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
+ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok'
 ```
+
+If OpenCode returns `Token refresh failed: 401`, first make sure the file is writable in the container. OAuth credentials are mutable because OpenCode refreshes and rotates tokens. If it is still failing after a read-write remount, re-run `opencode providers login` for the affected provider.
 
 ## Missing `GITHUB_TOKEN` in SSH commands
 

@@ -43,7 +43,7 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 -o BatchMode=yes -o ConnectTimeout=8 pzagent@<host> 'echo connected'
    ssh -p 2022 pzagent@<host> 'test -w /workspace && echo workspace-ok'
    ssh -p 2022 pzagent@<host> 'command -v opencode && command -v tmux && command -v gh && command -v jq'
-   ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
+   ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok'
    ssh -p 2022 pzagent@<host> 'check-worker-runtime'
    ssh -p 2022 pzagent@<host> 'test -n "$GITHUB_TOKEN" && echo github-token-ok'
    ssh -p 2022 pzagent@<host> 'git config --global user.name && git config --global user.email'
@@ -125,7 +125,7 @@ Prefer summarized markdown over large raw file copies. When a repository is requ
 - [ ] SSH to `<host>:2022` works as `pzagent`
 - [ ] `/workspace` is writable
 - [ ] `opencode`, `tmux`, `gh`, `jq`, and git are available
-- [ ] OpenCode auth and `GITHUB_TOKEN` are present
+- [ ] OpenCode auth is present and writable for OAuth token refresh; `GITHUB_TOKEN` is present
 - [ ] Run directory exists under `/workspace/delegations/<run-id>`
 - [ ] `status.json` transitions through `ready`/`running` to `done` or `failed`
 - [ ] `12-output-summary.md` contains a free-form result

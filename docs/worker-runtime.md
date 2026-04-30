@@ -20,7 +20,7 @@ TZ=Europe/Berlin
 WORKSPACE=/workspace
 EOF
 chmod 600 ~/.pzagent/.worker-env
-test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok
+test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok
 ```
 
 ## Mount table
@@ -28,7 +28,7 @@ test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok
 | Host path | Container path | Mode | Purpose |
 |---|---|---:|---|
 | `~/.pzagent/authorized_keys` | `/home/pzagent/.ssh/authorized_keys` | ro | SSH login keys |
-| `~/.local/share/opencode/auth.json` | `/home/pzagent/.local/share/opencode/auth.json` | ro | OpenCode auth |
+| `~/.local/share/opencode/auth.json` | `/home/pzagent/.local/share/opencode/auth.json` | rw | OpenCode auth; writable so OAuth refresh tokens can be rotated |
 | `~/pzagent_work` | `/workspace` | rw | Repos and delegation artifacts |
 | `~/.pzagent/.worker-env` | env file | n/a | `GITHUB_TOKEN`, `TZ`, `WORKSPACE` |
 
@@ -46,7 +46,7 @@ docker compose logs --tail=100 hermes-worker
 ssh -p 2022 pzagent@<host> 'echo connected'
 ssh -p 2022 pzagent@<host> 'pwd; touch /workspace/.write-test && rm /workspace/.write-test && echo workspace-ok'
 ssh -p 2022 pzagent@<host> 'opencode --help >/dev/null && echo opencode-ok'
-ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
+ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok'
 ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ssh -p 2022 pzagent@<host> 'test -n "$GITHUB_TOKEN" && echo github-token-ok'
 ssh -p 2022 pzagent@<host> 'git config --global user.name && git config --global user.email'

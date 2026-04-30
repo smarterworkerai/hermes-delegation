@@ -58,6 +58,44 @@ Hermes Agent
 smarterworkerai@protonmail.com
 ```
 
+## Validated end-to-end `start-delegation` smoke test
+
+A real end-to-end validation was run successfully against the worker:
+
+- host: `127.0.0.1`
+- model: `openai/gpt-5.5`
+- run id: `smoke-20260430-161200-start-delegation`
+- final `status.json` state: `done`
+- final result: `exit_code=0`
+- correction rounds: `0`
+
+Recommended operator workflow:
+
+```bash
+chmod 600 ~/.ssh/<worker-key>
+ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'echo CONNECTED && whoami && pwd'
+start-delegation <host> openai/gpt-5.5
+ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'ls -td /workspace/delegations/* | head -1'
+ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'jq . /workspace/delegations/<run-id>/status.json'
+```
+
+Success criteria:
+
+- the worker accepts SSH key login as `pzagent`
+- the delegation creates `/workspace/delegations/<run-id>/`
+- `status.json` transitions to `done`
+- the run emits:
+  - `11-commands.md`
+  - `12-output-summary.md`
+  - `result/notes/smoke-proof.txt`
+
+Observed proof from the validated run:
+
+- `whoami` = `pzagent`
+- `pwd` = `/workspace`
+- `opencode --version` = `1.14.30`
+- `gh --version | head -1` = `gh version 2.92.0 (2026-04-28)`
+
 ## Repository placement
 
 When a delegated task needs a repository, clone it directly under `/workspace/<project-name>`. Do not use an extra `/workspace/repos` layer for the first implementation.

@@ -16,6 +16,17 @@ Then inspect container logs:
 docker compose logs --tail=200 hermes-worker
 ```
 
+## SSH private key ignored by the client
+
+If the SSH client shows `UNPROTECTED PRIVATE KEY FILE!` or silently ignores the key, fix the private key mode on the host:
+
+```bash
+chmod 600 ~/.ssh/<worker-key>
+ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'echo CONNECTED'
+```
+
+This was the real cause of one failed loopback SSH smoke test during validation.
+
 ## Password login works or is prompted
 
 Password authentication should be disabled. Confirm the active SSH config:

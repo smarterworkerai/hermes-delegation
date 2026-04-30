@@ -36,17 +36,36 @@ Passed:
 - Docker image build (`docker build -t hermes-delegation-worker:test .`)
 - `docker compose` create/start smoke test on the local host
 - Worker runtime check inside the container (`gh`, `opencode`, mounted auth/env/workspace)
+- SSH loopback login smoke test to `127.0.0.1:2022`
+- end-to-end `start-delegation` smoke test with model `openai/gpt-5.5`
 - Local git repository initialized and implementation committed
 
 Follow-up fix applied after runtime testing:
 
 - `entrypoint.sh` and `bootstrap-worker.sh` now also create/chown `/home/pzagent/.config/opencode`
 - this fixes an `EACCES: permission denied, mkdir '/home/pzagent/.config/opencode'` runtime issue seen during the first smoke test
+- SSH client private key permissions were corrected to `0600` for loopback login validation
 
-Known remaining issue:
+Validated end-to-end run:
 
-- SSH service is up and listening on `:2022`, but a loopback SSH login test from this host fails with `Permission denied (publickey)` because no matching private key for `~/.pzagent/authorized_keys` is available in this Hermes session/host context.
-- The mounted `authorized_keys` file itself is present with mode `600` and owner `1000:1000`, so the remaining blocker is client-side key availability, not container startup.
+- run id: `smoke-20260430-161200-start-delegation`
+- host: `127.0.0.1`
+- model: `openai/gpt-5.5`
+- final state: `done`
+- final result: `exit_code=0`
+- correction rounds: `0`
+
+Observed proof from the validated worker run:
+
+- `whoami` = `pzagent`
+- `pwd` = `/workspace`
+- `opencode --version` = `1.14.30`
+- `gh --version | head -1` = `gh version 2.92.0 (2026-04-28)`
+
+Current status:
+
+- no known blocking issue remains for the always-on SSH worker flow
+- the implementation is ready to be checked out on a fresh host and started with `docker compose up -d --build`
 
 ## NAS artifacts
 

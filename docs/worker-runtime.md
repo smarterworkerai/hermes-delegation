@@ -47,6 +47,7 @@ ssh -p 2022 pzagent@<host> 'echo connected'
 ssh -p 2022 pzagent@<host> 'pwd; touch /workspace/.write-test && rm /workspace/.write-test && echo workspace-ok'
 ssh -p 2022 pzagent@<host> 'opencode --help >/dev/null && echo opencode-ok'
 ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
+ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ssh -p 2022 pzagent@<host> 'test -n "$GITHUB_TOKEN" && echo github-token-ok'
 ssh -p 2022 pzagent@<host> 'git config --global user.name && git config --global user.email'
 ```

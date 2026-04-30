@@ -5,9 +5,34 @@ export HOME=/home/pzagent
 export WORKSPACE=${WORKSPACE:-/workspace}
 export TZ=${TZ:-Europe/Berlin}
 
-mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local/share/opencode "$WORKSPACE" "$WORKSPACE/delegations"
-chown pzagent:pzagent /home/pzagent /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local /home/pzagent/.local/share /home/pzagent/.local/share/opencode || true
+RUNTIME_DIR=/home/pzagent/.config/hermes-worker
+RUNTIME_ENV="$RUNTIME_DIR/runtime.env"
+SSH_ENV=/home/pzagent/.ssh/environment
+
+mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local/share/opencode "$RUNTIME_DIR" "$WORKSPACE" "$WORKSPACE/delegations"
+chown pzagent:pzagent /home/pzagent /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local /home/pzagent/.local/share /home/pzagent/.local/share/opencode "$RUNTIME_DIR" || true
 chmod 700 /home/pzagent/.ssh || true
+
+cat > "$RUNTIME_ENV" <<EOF
+# Generated at container start by /entrypoint.sh
+# shellcheck shell=bash
+export GITHUB_TOKEN=$(printf '%q' "${GITHUB_TOKEN:-}")
+export TZ=$(printf '%q' "$TZ")
+export WORKSPACE=$(printf '%q' "$WORKSPACE")
+export HOME=/home/pzagent
+EOF
+chown pzagent:pzagent "$RUNTIME_ENV"
+chmod 600 "$RUNTIME_ENV"
+
+# Make variables available to SSH sessions too (including non-interactive `ssh host 'cmd'`).
+cat > "$SSH_ENV" <<EOF
+GITHUB_TOKEN=${GITHUB_TOKEN:-}
+TZ=$TZ
+WORKSPACE=$WORKSPACE
+HOME=/home/pzagent
+EOF
+chown pzagent:pzagent "$SSH_ENV"
+chmod 600 "$SSH_ENV"
 
 if [[ ! -f /home/pzagent/.ssh/authorized_keys ]]; then
   echo "ERROR: /home/pzagent/.ssh/authorized_keys is missing. Mount ~/.pzagent/authorized_keys read-only." >&2

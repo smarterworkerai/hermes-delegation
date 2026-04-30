@@ -49,15 +49,28 @@ Inside the worker:
 ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
 ```
 
-## Missing `GITHUB_TOKEN`
+## Missing `GITHUB_TOKEN` in SSH commands
 
-Put it in `~/.pzagent/.worker-env` and restart:
+First verify the worker runtime env file:
+
+```bash
+ssh -p 2022 pzagent@<host> 'check-worker-runtime'
+```
+
+If `github_token=` is empty, update host env and restart:
 
 ```bash
 chmod 600 ~/.pzagent/.worker-env
 docker compose restart hermes-worker
+ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ssh -p 2022 pzagent@<host> 'test -n "$GITHUB_TOKEN" && echo github-token-ok'
 ```
+
+Implementation note:
+
+- `/entrypoint.sh` writes `/home/pzagent/.config/hermes-worker/runtime.env`
+- `run-delegated-task` and its tmux runner both `source` that file
+- SSH sessions load `/home/pzagent/.ssh/environment` (enabled via `PermitUserEnvironment yes`)
 
 ## `/workspace` is not writable
 

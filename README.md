@@ -14,9 +14,9 @@ WORKSPACE=/workspace
 EOF
 chmod 600 ~/.pzagent/.worker-env
 sudo chown -R 1000:1000 ~/pzagent_work
-
 docker compose up -d --build
 ssh -p 2022 pzagent@<host> 'echo connected && pwd && git config --global --list'
+ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ```
 
 ## Validated smoke test

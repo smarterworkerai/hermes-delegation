@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RUNTIME_ENV=/home/pzagent/.config/hermes-worker/runtime.env
+if [[ -r "$RUNTIME_ENV" ]]; then
+  # shellcheck disable=SC1090
+  source "$RUNTIME_ENV"
+fi
+
 usage() {
   cat >&2 <<'EOF'
 Usage: run-delegated-task <run-dir> <model> [correction-file]
@@ -84,10 +90,11 @@ cat >> "$RUN_DIR/11-commands.md" <<EOF
 
 ## Launch $(now_utc)
 
-\`\`\`bash
+```bash
 cd /workspace
+source /home/pzagent/.config/hermes-worker/runtime.env
 opencode run --model '$MODEL' "\$(cat '$PROMPT_FILE')"
-\`\`\`
+```
 EOF
 
 RUNNER="$RUN_DIR/.tmux-runner.sh"
@@ -97,6 +104,11 @@ set -euo pipefail
 RUN_DIR=$1
 MODEL=$2
 PROMPT_FILE=$3
+RUNTIME_ENV=/home/pzagent/.config/hermes-worker/runtime.env
+if [[ -r "$RUNTIME_ENV" ]]; then
+  # shellcheck disable=SC1090
+  source "$RUNTIME_ENV"
+fi
 now_utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 update_state() {
   local state=$1 result=${2:-null}

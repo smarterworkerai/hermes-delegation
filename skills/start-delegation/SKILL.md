@@ -44,6 +44,7 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 pzagent@<host> 'test -w /workspace && echo workspace-ok'
    ssh -p 2022 pzagent@<host> 'command -v opencode && command -v tmux && command -v gh && command -v jq'
    ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && echo opencode-auth-ok'
+   ssh -p 2022 pzagent@<host> 'check-worker-runtime'
    ssh -p 2022 pzagent@<host> 'test -n "$GITHUB_TOKEN" && echo github-token-ok'
    ssh -p 2022 pzagent@<host> 'git config --global user.name && git config --global user.email'
    ssh -p 2022 pzagent@<host> 'df -h /workspace'

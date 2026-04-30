@@ -62,6 +62,22 @@ Observed proof from the validated worker run:
 - `opencode --version` = `1.14.30`
 - `gh --version | head -1` = `gh version 2.92.0 (2026-04-28)`
 
+Follow-up fixes applied after Dell-AI runtime testing:
+
+- OpenCode `auth.json` is now mounted read-write, because OAuth refresh/token rotation may need to update this file.
+- Runtime checks now verify `opencode-auth-rw-ok`, not only file presence.
+- `run-delegated-task.sh` no longer evaluates the prompt command substitution while writing `11-commands.md`; this removes the harmless but noisy `cat: '$PROMPT_FILE': No such file or directory` launch message.
+
+Validated on Dell-AI worker after OpenAI re-auth:
+
+- host: `192.168.178.116`
+- SSH port: `2022`
+- direct OpenCode smoke: `opencode run --model openai/gpt-5.5 ...` returned `OPENCODE_SMOKE_OK`
+- end-to-end delegation smoke run: `20260430-215622-smoke-fixed-runner`
+- final state: `done`
+- final result: `DELEGATION_FIXED_RUNNER_OK`
+- correction rounds: `0`
+
 Current status:
 
 - no known blocking issue remains for the always-on SSH worker flow

@@ -26,14 +26,16 @@ cat > "$LOCAL_DIR/01-environment.md" <<EOF
 - Worker user: pzagent
 - Model: $MODEL
 - Workspace: /workspace
+- Source root: /workspace/source
 - Delegation run directory: /workspace/delegations/$RUN_ID
-- Repository checkout rule: clone directly under /workspace/<project-name>
+- Repository checkout rule: clone directly under /workspace/source/<project-name>
 EOF
 cat > "$LOCAL_DIR/02-constraints.md" <<'EOF'
 # Constraints
 
 - Use OpenCode only.
 - Keep all writes inside /workspace unless explicitly required by the task.
+- Keep source repositories under /workspace/source and delegation artifacts under /workspace/delegations.
 - Prefer a PR/MR as the primary implementation artifact for code changes.
 - Do not invent credentials. Use only mounted/authenticated tools.
 - Record important commands in 11-commands.md.

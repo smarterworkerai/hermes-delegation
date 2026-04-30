@@ -3,13 +3,14 @@ set -euo pipefail
 
 export HOME=/home/pzagent
 export WORKSPACE=${WORKSPACE:-/workspace}
+export SOURCE_ROOT=${SOURCE_ROOT:-$WORKSPACE/source}
 export TZ=${TZ:-Europe/Berlin}
 
 RUNTIME_DIR=/home/pzagent/.config/hermes-worker
 RUNTIME_ENV="$RUNTIME_DIR/runtime.env"
 SSH_ENV=/home/pzagent/.ssh/environment
 
-mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local/share/opencode "$RUNTIME_DIR" "$WORKSPACE" "$WORKSPACE/delegations"
+mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local/share/opencode "$RUNTIME_DIR" "$WORKSPACE" "$WORKSPACE/delegations" "$SOURCE_ROOT"
 chown pzagent:pzagent /home/pzagent /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local /home/pzagent/.local/share /home/pzagent/.local/share/opencode "$RUNTIME_DIR" || true
 chmod 700 /home/pzagent/.ssh || true
 
@@ -19,6 +20,7 @@ cat > "$RUNTIME_ENV" <<EOF
 export GITHUB_TOKEN=$(printf '%q' "${GITHUB_TOKEN:-}")
 export TZ=$(printf '%q' "$TZ")
 export WORKSPACE=$(printf '%q' "$WORKSPACE")
+export SOURCE_ROOT=$(printf '%q' "$SOURCE_ROOT")
 export HOME=/home/pzagent
 EOF
 chown pzagent:pzagent "$RUNTIME_ENV"
@@ -29,6 +31,7 @@ cat > "$SSH_ENV" <<EOF
 GITHUB_TOKEN=${GITHUB_TOKEN:-}
 TZ=$TZ
 WORKSPACE=$WORKSPACE
+SOURCE_ROOT=$SOURCE_ROOT
 HOME=/home/pzagent
 EOF
 chown pzagent:pzagent "$SSH_ENV"

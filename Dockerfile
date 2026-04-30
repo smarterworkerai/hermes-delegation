@@ -7,6 +7,7 @@ ARG OPENCODE_PACKAGE=opencode-ai@latest
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Europe/Berlin \
     WORKSPACE=/workspace \
+    SOURCE_ROOT=/workspace/source \
     HOME=/home/pzagent \
     PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
@@ -28,7 +29,7 @@ RUN apt-get update \
 
 RUN groupadd --gid "${PZAGENT_GID}" pzagent \
  && useradd --uid "${PZAGENT_UID}" --gid "${PZAGENT_GID}" --create-home --home-dir /home/pzagent --shell /bin/bash pzagent \
- && mkdir -p /workspace /var/run/sshd /run/sshd /home/pzagent/.ssh /home/pzagent/.local/share/opencode /workspace/delegations \
+ && mkdir -p /workspace /workspace/source /var/run/sshd /run/sshd /home/pzagent/.ssh /home/pzagent/.local/share/opencode /workspace/delegations \
  && chown -R pzagent:pzagent /workspace /home/pzagent \
  && chmod 700 /home/pzagent/.ssh
 

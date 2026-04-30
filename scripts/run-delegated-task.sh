@@ -59,11 +59,14 @@ if tmux has-session -t "$SESSION" 2>/dev/null; then
 fi
 
 PROMPT_FILE="$RUN_DIR/.opencode-prompt.md"
+SOURCE_ROOT=${SOURCE_ROOT:-${WORKSPACE:-/workspace}/source}
+mkdir -p "$SOURCE_ROOT"
 {
   echo "# Delegated task"
   echo
   echo "You are an always-on OpenCode worker running inside the Hermes delegation container."
-  echo "Use /workspace for repositories. Clone repositories directly under /workspace/<project-name>."
+  echo "Use ${SOURCE_ROOT} for repositories. Clone repositories directly under ${SOURCE_ROOT}/<project-name>."
+  echo "Keep delegation run artifacts under $RUN_DIR; do not clone source repositories into /workspace/delegations."
   echo "Make the primary deliverable a GitHub PR/MR when the task involves code changes."
   echo "Write a clear free-form final report to $RUN_DIR/12-output-summary.md."
   echo "If you create a PR/MR, write its URL to $RUN_DIR/result/notes/pr-url.txt."
@@ -91,8 +94,9 @@ PROMPT_FILE="$RUN_DIR/.opencode-prompt.md"
   echo "## Launch $(now_utc)"
   echo
   echo '```bash'
-  echo 'cd /workspace'
   echo 'source /home/pzagent/.config/hermes-worker/runtime.env'
+  printf 'mkdir -p %q\n' "$SOURCE_ROOT"
+  printf 'cd %q\n' "$SOURCE_ROOT"
   printf 'opencode run --model %q "$(cat %q)"\n' "$MODEL" "$PROMPT_FILE"
   echo '```'
 } >> "$RUN_DIR/11-commands.md"
@@ -128,7 +132,9 @@ update_state() {
 } >> "$RUN_DIR/10-worker-log.md"
 update_state running null
 set +e
-cd /workspace
+SOURCE_ROOT=${SOURCE_ROOT:-${WORKSPACE:-/workspace}/source}
+mkdir -p "$SOURCE_ROOT"
+cd "$SOURCE_ROOT"
 opencode run --model "$MODEL" "$(cat "$PROMPT_FILE")" 2>&1 | tee -a "$RUN_DIR/10-worker-log.md" > "$RUN_DIR/result/artifacts/opencode-output.txt"
 rc=${PIPESTATUS[0]}
 set -e

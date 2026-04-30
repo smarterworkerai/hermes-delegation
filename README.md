@@ -5,12 +5,13 @@ Always-on SSH-accessible OpenCode worker container for Hermes orchestration.
 ## Quick start
 
 ```bash
-mkdir -p ~/.pzagent ~/pzagent_work
+mkdir -p ~/.pzagent ~/pzagent_work/source
 install -m 600 /path/to/authorized_keys ~/.pzagent/authorized_keys
 cat > ~/.pzagent/.worker-env <<'EOF'
 GITHUB_TOKEN=***
 TZ=Europe/Berlin
 WORKSPACE=/workspace
+SOURCE_ROOT=/workspace/source
 EOF
 chmod 600 ~/.pzagent/.worker-env
 sudo chown -R 1000:1000 ~/pzagent_work
@@ -46,6 +47,7 @@ Expected success indicators:
 
 - SSH login succeeds as `pzagent`
 - the run directory is created under `/workspace/delegations/<run-id>`
+- source repositories are cloned under `/workspace/source/<project-name>`
 - `status.json` reaches `state: done`
 - the run produces `11-commands.md`, `12-output-summary.md`, and `result/notes/smoke-proof.txt`
 

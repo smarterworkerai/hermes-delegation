@@ -13,6 +13,7 @@ Read from NAS:
 - Always-on `docker-compose.yml` mapping host `2022` to container SSH `22`
 - `pzagent` user with UID/GID `1000:1000` and home `/home/pzagent`
 - `/workspace` bind mount contract
+- `/workspace/source` repository checkout root under the host `~/pzagent_work/source` directory
 - mounted `authorized_keys`, OpenCode `auth.json`, and `.worker-env` with `GITHUB_TOKEN`
 - SSH hardening config for key-only login
 - `entrypoint.sh` and `bootstrap-worker.sh` for permissions and git identity
@@ -58,7 +59,7 @@ Validated end-to-end run:
 Observed proof from the validated worker run:
 
 - `whoami` = `pzagent`
-- `pwd` = `/workspace`
+- OpenCode launch `pwd` = `/workspace/source`
 - `opencode --version` = `1.14.30`
 - `gh --version | head -1` = `gh version 2.92.0 (2026-04-28)`
 
@@ -95,7 +96,7 @@ Uploaded to the NAS under `hermes-delegation/`:
 On a Docker-capable target host, extract the zip and run:
 
 ```bash
-mkdir -p ~/.pzagent ~/pzagent_work
+mkdir -p ~/.pzagent ~/pzagent_work/source
 install -m 600 /path/to/authorized_keys ~/.pzagent/authorized_keys
 cp .worker-env.example ~/.pzagent/.worker-env
 # edit ~/.pzagent/.worker-env and set GITHUB_TOKEN

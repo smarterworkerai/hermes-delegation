@@ -14,7 +14,7 @@ metadata:
 
 ## Overview
 
-Use this skill when the user says `start-delegation <host> <model>` or asks to hand off coding work to the always-on SSH OpenCode worker. The worker runs as `pzagent`, listens on SSH port `2022`, uses `/workspace` as the only writable host bind mount, and stores run artifacts under `/workspace/delegations/<run-id>/`.
+Use this skill when the user says `start-delegation <host> <model>` or asks to hand off coding work to the always-on SSH OpenCode worker. The worker runs as `pzagent`, listens on SSH port `2022`, uses `/workspace` as the writable host bind mount, stores run artifacts under `/workspace/delegations/<run-id>/`, and keeps source checkouts under `/workspace/source/<project-name>`.
 
 The orchestrator remains responsible for context preparation, launch, polling, medium-depth review, correction rounds for weak output, and the final user-facing summary.
 
@@ -42,6 +42,7 @@ start-delegation worker.local openrouter/claude4.6
    ```bash
    ssh -p 2022 -o BatchMode=yes -o ConnectTimeout=8 pzagent@<host> 'echo connected'
    ssh -p 2022 pzagent@<host> 'test -w /workspace && echo workspace-ok'
+   ssh -p 2022 pzagent@<host> 'test -d /workspace/source && test -w /workspace/source && echo source-root-ok'
    ssh -p 2022 pzagent@<host> 'command -v opencode && command -v tmux && command -v gh && command -v jq'
    ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok'
    ssh -p 2022 pzagent@<host> 'check-worker-runtime'
@@ -109,12 +110,12 @@ Run directory:
 └── status.json
 ```
 
-Prefer summarized markdown over large raw file copies. When a repository is required, let the worker clone it directly into `/workspace/<project-name>`.
+Prefer summarized markdown over large raw file copies. When a repository is required, let the worker clone it directly into `/workspace/source/<project-name>`.
 
 ## Common Pitfalls
 
 1. **Defaulting to OpenRouter.** Never rewrite the model. Pass it to OpenCode unchanged.
-2. **Nested repository paths.** Use `/workspace/<project-name>`, not `/workspace/repos/<project-name>`.
+2. **Wrong repository root.** Use `/workspace/source/<project-name>`, not `/workspace/<project-name>` and not `/workspace/delegations/<project-name>`.
 3. **Reporting without review.** Always inspect summary, log, commands, artifacts, and PR/MR URL before finalizing.
 4. **Ignoring weak output.** Send the task back for correction rather than pretending it is done.
 5. **Copying huge files.** Summarize context unless exact files are necessary.
@@ -124,6 +125,7 @@ Prefer summarized markdown over large raw file copies. When a repository is requ
 
 - [ ] SSH to `<host>:2022` works as `pzagent`
 - [ ] `/workspace` is writable
+- [ ] `/workspace/source` exists and is writable for repository checkouts
 - [ ] `opencode`, `tmux`, `gh`, `jq`, and git are available
 - [ ] OpenCode auth is present and writable for OAuth token refresh; `GITHUB_TOKEN` is present
 - [ ] Run directory exists under `/workspace/delegations/<run-id>`

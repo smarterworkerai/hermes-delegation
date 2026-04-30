@@ -79,9 +79,13 @@ Implementation note:
 The mounted `~/pzagent_work` directory should be owned by UID/GID `1000:1000`:
 
 ```bash
+mkdir -p ~/pzagent_work/source
 sudo chown -R 1000:1000 ~/pzagent_work
 ssh -p 2022 pzagent@<host> 'touch /workspace/.write-test && rm /workspace/.write-test'
+ssh -p 2022 pzagent@<host> 'touch /workspace/source/.write-test && rm /workspace/source/.write-test'
 ```
+
+Repository checkouts should live under `/workspace/source/<project-name>`. Keep `/workspace/delegations` for run handoff bundles and logs only.
 
 ## OpenCode task stuck
 

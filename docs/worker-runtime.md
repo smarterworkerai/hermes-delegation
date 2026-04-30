@@ -11,13 +11,14 @@ The image is based on `debian:13-slim` and includes: OpenSSH server, OpenCode (`
 ## Host prerequisites
 
 ```bash
-mkdir -p ~/.pzagent ~/pzagent_work
+mkdir -p ~/.pzagent ~/pzagent_work/source
 install -m 600 /path/to/authorized_keys ~/.pzagent/authorized_keys
 sudo chown -R 1000:1000 ~/pzagent_work
 cat > ~/.pzagent/.worker-env <<'EOF'
 GITHUB_TOKEN=***
 TZ=Europe/Berlin
 WORKSPACE=/workspace
+SOURCE_ROOT=/workspace/source
 EOF
 chmod 600 ~/.pzagent/.worker-env
 test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok
@@ -29,8 +30,9 @@ test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/aut
 |---|---|---:|---|
 | `~/.pzagent/authorized_keys` | `/home/pzagent/.ssh/authorized_keys` | ro | SSH login keys |
 | `~/.local/share/opencode/auth.json` | `/home/pzagent/.local/share/opencode/auth.json` | rw | OpenCode auth; writable so OAuth refresh tokens can be rotated |
-| `~/pzagent_work` | `/workspace` | rw | Repos and delegation artifacts |
-| `~/.pzagent/.worker-env` | env file | n/a | `GITHUB_TOKEN`, `TZ`, `WORKSPACE` |
+| `~/pzagent_work` | `/workspace` | rw | Delegation artifacts plus `source/` checkout root |
+| `~/pzagent_work/source` | `/workspace/source` | rw | Repository checkout root |
+| `~/.pzagent/.worker-env` | env file | n/a | `GITHUB_TOKEN`, `TZ`, `WORKSPACE`, `SOURCE_ROOT` |
 
 ## Build and run
 
@@ -45,6 +47,7 @@ docker compose logs --tail=100 hermes-worker
 ```bash
 ssh -p 2022 pzagent@<host> 'echo connected'
 ssh -p 2022 pzagent@<host> 'pwd; touch /workspace/.write-test && rm /workspace/.write-test && echo workspace-ok'
+ssh -p 2022 pzagent@<host> 'touch /workspace/source/.write-test && rm /workspace/source/.write-test && echo source-root-ok'
 ssh -p 2022 pzagent@<host> 'opencode --help >/dev/null && echo opencode-ok'
 ssh -p 2022 pzagent@<host> 'test -f ~/.local/share/opencode/auth.json && test -w ~/.local/share/opencode/auth.json && echo opencode-auth-rw-ok'
 ssh -p 2022 pzagent@<host> 'check-worker-runtime'
@@ -84,6 +87,7 @@ Success criteria:
 
 - the worker accepts SSH key login as `pzagent`
 - the delegation creates `/workspace/delegations/<run-id>/`
+- source repositories are cloned under `/workspace/source/<project-name>`
 - `status.json` transitions to `done`
 - the run emits:
   - `11-commands.md`
@@ -93,10 +97,10 @@ Success criteria:
 Observed proof from the validated run:
 
 - `whoami` = `pzagent`
-- `pwd` = `/workspace`
+- OpenCode launch `pwd` = `/workspace/source`
 - `opencode --version` = `1.14.30`
 - `gh --version | head -1` = `gh version 2.92.0 (2026-04-28)`
 
 ## Repository placement
 
-When a delegated task needs a repository, clone it directly under `/workspace/<project-name>`. Do not use an extra `/workspace/repos` layer for the first implementation.
+When a delegated task needs a repository, clone it directly under `/workspace/source/<project-name>`. Keep `/workspace/delegations` reserved for handoff bundles, logs, and results.

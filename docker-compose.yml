@@ -16,6 +16,7 @@ services:
     environment:
       TZ: Europe/Berlin
       WORKSPACE: /workspace
+      SOURCE_ROOT: /workspace/source
       HOME: /home/pzagent
     volumes:
       - ${HOME}/.pzagent/authorized_keys:/home/pzagent/.ssh/authorized_keys:ro

@@ -86,16 +86,16 @@ PROMPT_FILE="$RUN_DIR/.opencode-prompt.md"
   fi
 } > "$PROMPT_FILE"
 
-cat >> "$RUN_DIR/11-commands.md" <<EOF
-
-## Launch $(now_utc)
-
-```bash
-cd /workspace
-source /home/pzagent/.config/hermes-worker/runtime.env
-opencode run --model '$MODEL' "\$(cat '$PROMPT_FILE')"
-```
-EOF
+{
+  echo
+  echo "## Launch $(now_utc)"
+  echo
+  echo '```bash'
+  echo 'cd /workspace'
+  echo 'source /home/pzagent/.config/hermes-worker/runtime.env'
+  printf 'opencode run --model %q "$(cat %q)"\n' "$MODEL" "$PROMPT_FILE"
+  echo '```'
+} >> "$RUN_DIR/11-commands.md"
 
 RUNNER="$RUN_DIR/.tmux-runner.sh"
 cat > "$RUNNER" <<'EOF'

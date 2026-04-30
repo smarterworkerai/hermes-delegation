@@ -5,8 +5,8 @@ export HOME=/home/pzagent
 export WORKSPACE=${WORKSPACE:-/workspace}
 export TZ=${TZ:-Europe/Berlin}
 
-mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.local/share/opencode "$WORKSPACE" "$WORKSPACE/delegations"
-chown pzagent:pzagent /home/pzagent /home/pzagent/.ssh /home/pzagent/.local /home/pzagent/.local/share /home/pzagent/.local/share/opencode || true
+mkdir -p /run/sshd /var/run/sshd /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local/share/opencode "$WORKSPACE" "$WORKSPACE/delegations"
+chown pzagent:pzagent /home/pzagent /home/pzagent/.ssh /home/pzagent/.config /home/pzagent/.config/opencode /home/pzagent/.local /home/pzagent/.local/share /home/pzagent/.local/share/opencode || true
 chmod 700 /home/pzagent/.ssh || true
 
 if [[ ! -f /home/pzagent/.ssh/authorized_keys ]]; then

@@ -5,8 +5,8 @@ run_as_pzagent() {
   su -s /bin/bash - pzagent -c "$*"
 }
 
-mkdir -p /workspace/delegations
-chown pzagent:pzagent /workspace /workspace/delegations 2>/dev/null || true
+mkdir -p /workspace/delegations /home/pzagent/.config/opencode
+chown pzagent:pzagent /workspace /workspace/delegations /home/pzagent/.config /home/pzagent/.config/opencode 2>/dev/null || true
 
 run_as_pzagent 'git config --global user.name "Hermes Agent"'
 run_as_pzagent 'git config --global user.email "smarterworkerai@protonmail.com"'

@@ -1,0 +1,72 @@
+# Hermes Delegation Implementation Result
+
+## Source inputs
+
+Read from NAS:
+
+- `hermes-delegation/plan.md`
+- `hermes-delegation/execution-checklist.md`
+
+## Implemented deliverables
+
+- Debian 13 slim worker `Dockerfile`
+- Always-on `docker-compose.yml` mapping host `2022` to container SSH `22`
+- `pzagent` user with UID/GID `1000:1000` and home `/home/pzagent`
+- `/workspace` bind mount contract
+- mounted `authorized_keys`, OpenCode `auth.json`, and `.worker-env` with `GITHUB_TOKEN`
+- SSH hardening config for key-only login
+- `entrypoint.sh` and `bootstrap-worker.sh` for permissions and git identity
+- worker scripts:
+  - `run-delegated-task.sh`
+  - `collect-results.sh`
+  - `cleanup-old-runs.sh` (dry-run only)
+- handoff docs and templates
+- Hermes `start-delegation` skill with explicit `<host> <model>` workflow
+- `.worker-env.example`
+- README and troubleshooting docs
+- local git commit: `feat: implement delegation worker`
+
+## Validation performed
+
+Passed:
+
+- Bash syntax validation for all shell scripts with `bash -n`
+- Minimal skill frontmatter validation (`name`, `description`, body)
+- Docker Compose config validation with a temporary fake HOME containing required env/mount files
+- Docker image build (`docker build -t hermes-delegation-worker:test .`)
+- `docker compose` create/start smoke test on the local host
+- Worker runtime check inside the container (`gh`, `opencode`, mounted auth/env/workspace)
+- Local git repository initialized and implementation committed
+
+Follow-up fix applied after runtime testing:
+
+- `entrypoint.sh` and `bootstrap-worker.sh` now also create/chown `/home/pzagent/.config/opencode`
+- this fixes an `EACCES: permission denied, mkdir '/home/pzagent/.config/opencode'` runtime issue seen during the first smoke test
+
+Known remaining issue:
+
+- SSH service is up and listening on `:2022`, but a loopback SSH login test from this host fails with `Permission denied (publickey)` because no matching private key for `~/.pzagent/authorized_keys` is available in this Hermes session/host context.
+- The mounted `authorized_keys` file itself is present with mode `600` and owner `1000:1000`, so the remaining blocker is client-side key availability, not container startup.
+
+## NAS artifacts
+
+Uploaded to the NAS under `hermes-delegation/`:
+
+- `hermes-delegation-implementation.zip`
+- `implementation-result.md`
+
+## Next recommended step
+
+On a Docker-capable target host, extract the zip and run:
+
+```bash
+mkdir -p ~/.pzagent ~/pzagent_work
+install -m 600 /path/to/authorized_keys ~/.pzagent/authorized_keys
+cp .worker-env.example ~/.pzagent/.worker-env
+# edit ~/.pzagent/.worker-env and set GITHUB_TOKEN
+chmod 600 ~/.pzagent/.worker-env
+sudo chown -R 1000:1000 ~/pzagent_work
+
+docker compose up -d --build
+ssh -p 2022 pzagent@<host> 'echo connected && pwd && git config --global --list'
+```

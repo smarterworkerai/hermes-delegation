@@ -1,0 +1,25 @@
+services:
+  hermes-worker:
+    build:
+      context: .
+      args:
+        PZAGENT_UID: ${PZAGENT_UID:-1000}
+        PZAGENT_GID: ${PZAGENT_GID:-1000}
+        OPENCODE_PACKAGE: ${OPENCODE_PACKAGE:-opencode-ai@latest}
+    image: hermes-delegation-worker:latest
+    container_name: hermes-delegation-worker
+    restart: unless-stopped
+    ports:
+      - "2022:22"
+    env_file:
+      - ${HOME}/.pzagent/.worker-env
+    environment:
+      TZ: Europe/Berlin
+      WORKSPACE: /workspace
+      HOME: /home/pzagent
+    volumes:
+      - ${HOME}/.pzagent/authorized_keys:/home/pzagent/.ssh/authorized_keys:ro
+      - ${HOME}/.local/share/opencode/auth.json:/home/pzagent/.local/share/opencode/auth.json:ro
+      - ${HOME}/pzagent_work:/workspace
+    working_dir: /workspace
+    init: true

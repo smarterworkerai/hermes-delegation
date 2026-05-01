@@ -39,8 +39,9 @@ COPY scripts/run-delegated-task.sh /usr/local/bin/run-delegated-task
 COPY scripts/collect-results.sh /usr/local/bin/collect-results
 COPY scripts/cleanup-old-runs.sh /usr/local/bin/cleanup-old-runs
 COPY scripts/check-worker-runtime.sh /usr/local/bin/check-worker-runtime
+COPY scripts/follow-delegation.sh /usr/local/bin/follow-delegation
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh /usr/local/bin/bootstrap-worker /usr/local/bin/run-delegated-task /usr/local/bin/collect-results /usr/local/bin/cleanup-old-runs /usr/local/bin/check-worker-runtime \
+RUN chmod +x /entrypoint.sh /usr/local/bin/bootstrap-worker /usr/local/bin/run-delegated-task /usr/local/bin/collect-results /usr/local/bin/cleanup-old-runs /usr/local/bin/check-worker-runtime /usr/local/bin/follow-delegation \
  && ssh-keygen -A
 
 EXPOSE 22

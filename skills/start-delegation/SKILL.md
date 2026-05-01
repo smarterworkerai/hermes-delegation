@@ -75,19 +75,28 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 pzagent@<host> 'jq -r .state /workspace/delegations/<run-id>/status.json'
    ```
    Terminal states are `done` and `failed`.
-8. **Collect results:**
+8. **Inspect a live run when requested:**
+   ```bash
+   ssh -p 2022 pzagent@<host> 'tmux ls'
+   ssh -p 2022 pzagent@<host> '/workspace/delegations/follow-delegation <run-id>'
+   ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/10-worker-log.md'
+   ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/12-output-summary.md'
+   ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'
+   ```
+   Prefer `/workspace/delegations/follow-delegation <run-id>` for live observation. It waits for the run directory/files instead of failing when the worker has not started writing yet. Use `tmux attach` only when you specifically need to inspect the interactive terminal state.
+9. **Collect results:**
    ```bash
    ssh -p 2022 pzagent@<host> 'collect-results /workspace/delegations/<run-id>' > delegation-result.md
    scp -P 2022 -r pzagent@<host>:/workspace/delegations/<run-id>/result ./result
    ```
-9. **Review medium-depth:** Verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists or a clear reason is given.
-10. **Correction loop for weak results:** Write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch:
+10. **Review medium-depth:** Verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists or a clear reason is given.
+11. **Correction loop for weak results:** Write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch:
     ```bash
     scp -P 2022 correction.md pzagent@<host>:/workspace/delegations/<run-id>/correction.md
     ssh -p 2022 pzagent@<host> 'jq ".state=\"correction_requested\" | .correction_rounds=(.correction_rounds+1)" /workspace/delegations/<run-id>/status.json > /tmp/status.$$.json && mv /tmp/status.$$.json /workspace/delegations/<run-id>/status.json'
     ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model> /workspace/delegations/<run-id>/correction.md'
     ```
-11. **Final report to user:** Include task attempted, host/model, run directory, PR/MR URL, changes, verification, correction rounds, remaining risks, and next step.
+12. **Final report to user:** Include task attempted, host/model, run directory, PR/MR URL, changes, verification, correction rounds, remaining risks, and next step.
 
 ## Handoff contract
 

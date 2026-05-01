@@ -7,9 +7,13 @@ run_as_pzagent() {
 
 WORKSPACE=${WORKSPACE:-/workspace}
 SOURCE_ROOT=${SOURCE_ROOT:-$WORKSPACE/source}
+DELEGATIONS_ROOT=${DELEGATIONS_ROOT:-$WORKSPACE/delegations}
 
-mkdir -p "$WORKSPACE/delegations" "$SOURCE_ROOT" /home/pzagent/.config/opencode
-chown pzagent:pzagent "$WORKSPACE" "$WORKSPACE/delegations" "$SOURCE_ROOT" /home/pzagent/.config /home/pzagent/.config/opencode 2>/dev/null || true
+mkdir -p "$DELEGATIONS_ROOT" "$SOURCE_ROOT" /home/pzagent/.config/opencode
+chown pzagent:pzagent "$WORKSPACE" "$DELEGATIONS_ROOT" "$SOURCE_ROOT" /home/pzagent/.config /home/pzagent/.config/opencode 2>/dev/null || true
+
+install -m 755 /usr/local/bin/follow-delegation "$DELEGATIONS_ROOT/follow-delegation"
+chown pzagent:pzagent "$DELEGATIONS_ROOT/follow-delegation" 2>/dev/null || true
 
 run_as_pzagent 'git config --global user.name "Hermes Agent"'
 run_as_pzagent 'git config --global user.email "smarterworkerai@protonmail.com"'

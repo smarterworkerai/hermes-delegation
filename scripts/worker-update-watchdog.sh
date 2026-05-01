@@ -13,7 +13,6 @@ LOG_FILE=${LOG_FILE:-$WORKSPACE_DIR/worker-update-watchdog.log}
 LOCK_DIR=${LOCK_DIR:-$WORKSPACE_DIR/.worker-update-watchdog.lock}
 COMPOSE_FILE=${COMPOSE_FILE:-$REPO_DIR/docker-compose.yml}
 CONTAINER_NAME=${CONTAINER_NAME:-hermes-delegation-worker}
-IMAGE_NAME=${IMAGE_NAME:-hermes-delegation-worker:latest}
 POLL_INTERVAL=${POLL_INTERVAL:-5}
 RUN_ONCE=${RUN_ONCE:-0}
 DRY_RUN=${DRY_RUN:-0}
@@ -73,7 +72,7 @@ cleanup_old_image_if_safe() {
     return 0
   fi
 
-  note "attempting to remove previous worker image: $previous_image_id"
+  note "attempting to remove previous worker image by id: $previous_image_id"
   if [[ "$DRY_RUN" == "1" ]]; then
     return 0
   fi
@@ -106,11 +105,7 @@ process_update() {
   current_image_id=$(docker inspect "$CONTAINER_NAME" --format '{{.Image}}' 2>/dev/null || true)
   cleanup_old_image_if_safe "$previous_image_id" "$current_image_id"
 
-  if [[ "$DRY_RUN" == "1" ]]; then
-    note "+ docker image prune -f"
-  else
-    docker image prune -f >/dev/null 2>&1 || note "docker image prune returned non-zero"
-  fi
+  note "skipping global docker image prune; cleanup is limited to the previous worker image id"
 
   rm -f "$UPDATE_MARKER" "$UPDATE_IN_PROGRESS" "$UPDATE_FAILED"
   note "worker update completed successfully"

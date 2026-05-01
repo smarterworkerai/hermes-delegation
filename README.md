@@ -75,8 +75,8 @@ What it does when the marker appears:
 
 1. `git -C <repo> pull --ff-only`
 2. `docker compose up -d --build --force-recreate`
-3. remove the previous worker image if it is no longer in use
-4. `docker image prune -f`
+3. remove the previous worker image by image id if it is no longer in use
+4. do not run a global Docker image prune; leave unrelated images alone
 5. remove `update_available`
 
 Useful files in `~/pzagent_work`:

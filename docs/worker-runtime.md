@@ -42,6 +42,41 @@ docker compose ps
 docker compose logs --tail=100 hermes-worker
 ```
 
+## Host-side update watchdog
+
+If a worker task changes runtime/container code and the running worker must be refreshed, signal it from inside the mounted workspace:
+
+```bash
+touch /workspace/update_available
+```
+
+That same marker appears on the host as `~/pzagent_work/update_available`.
+A host-side watchdog can react to it and refresh the worker from the repo checkout:
+
+```bash
+bash scripts/worker-update-watchdog.sh
+```
+
+Default behavior when the marker appears:
+
+1. `git -C <repo> pull --ff-only`
+2. `docker compose up -d --build --force-recreate`
+3. remove the previous worker image if it is no longer used
+4. `docker image prune -f`
+5. remove `update_available`
+
+State files written under `~/pzagent_work`:
+
+- `update_in_progress`
+- `update_failed`
+- `worker-update-watchdog.log`
+
+For one-shot processing during testing or from cron/systemd wrappers:
+
+```bash
+RUN_ONCE=1 bash scripts/worker-update-watchdog.sh
+```
+
 ## Smoke checks
 
 ```bash

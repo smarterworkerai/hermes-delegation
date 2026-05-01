@@ -123,3 +123,26 @@ rm -rf /workspace/delegations/<old-run-id>
 ```
 
 `cleanup-old-runs` is dry-run only and prints candidates.
+
+## Worker update marker detected but nothing happened
+
+If `~/pzagent_work/update_available` exists and the worker was not refreshed, verify the host-side watchdog is running from the worker repo checkout:
+
+```bash
+bash scripts/worker-update-watchdog.sh
+```
+
+For a single update pass during debugging:
+
+```bash
+RUN_ONCE=1 bash scripts/worker-update-watchdog.sh
+```
+
+Inspect watchdog state files/logs in `~/pzagent_work`:
+
+```bash
+ls -l ~/pzagent_work/update_* ~/pzagent_work/worker-update-watchdog.log 2>/dev/null || true
+tail -n 120 ~/pzagent_work/worker-update-watchdog.log
+```
+
+If `update_failed` exists, the watchdog leaves `update_available` in place so the failed refresh request is still visible.

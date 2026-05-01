@@ -51,4 +51,39 @@ Expected success indicators:
 - `status.json` reaches `state: done`
 - the run produces `11-commands.md`, `12-output-summary.md`, and `result/notes/smoke-proof.txt`
 
+## Worker self-update signal
+
+When a delegated task changes worker/runtime code and the host must rebuild the worker image, the orchestrator or a container-side process can create an empty marker file in the mounted workspace:
+
+```bash
+touch /workspace/update_available
+```
+
+Because `~/pzagent_work` is mounted to `/workspace`, that marker is also visible on the host as:
+
+```bash
+~/pzagent_work/update_available
+```
+
+Run the host-side watchdog from the repo checkout:
+
+```bash
+bash scripts/worker-update-watchdog.sh
+```
+
+What it does when the marker appears:
+
+1. `git -C <repo> pull --ff-only`
+2. `docker compose up -d --build --force-recreate`
+3. remove the previous worker image if it is no longer in use
+4. `docker image prune -f`
+5. remove `update_available`
+
+Useful files in `~/pzagent_work`:
+
+- `update_available` — requested rebuild/recreate
+- `update_in_progress` — watchdog is processing the update
+- `update_failed` — last update attempt failed; marker is left in place
+- `worker-update-watchdog.log` — append-only watchdog log
+
 See `docs/worker-runtime.md`, `docs/handoff-format.md`, and `docs/troubleshooting.md` for details. Install the Hermes skill from `skills/start-delegation/` into `~/.hermes/skills/autonomous-ai-agents/start-delegation/` or keep it in this project as operational documentation.

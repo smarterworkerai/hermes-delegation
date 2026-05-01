@@ -65,12 +65,33 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 pzagent@<host> 'mkdir -p /workspace/delegations/<run-id>'
    scp -P 2022 -r <local-handoff>/* pzagent@<host>:/workspace/delegations/<run-id>/
    ```
-6. **Launch worker job:**
+6. **Set per-run OpenCode directory whitelist (mandatory):** before launch, write a temporary worker config that allows only the active project and delegation paths, then deny everything else. This prevents `external_directory` permission loops and keeps sandbox boundaries explicit.
+   ```bash
+   ssh -p 2022 pzagent@<host> 'cat > ~/.config/opencode/opencode.json <<"JSON"
+{
+  "agent": {
+    "build": {
+      "permission": {
+        "external_directory": {
+          "/workspace/source/<project-name>/**": "allow",
+          "/workspace/delegations/<run-id>/**": "allow",
+          "*": "deny"
+        }
+      }
+    }
+  }
+}
+JSON
+opencode debug config'
+   ```
+   - Replace `<project-name>` and `<run-id>` before writing.
+   - Verify resolved config includes the expected `external_directory` map.
+7. **Launch worker job:**
    ```bash
    ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model>'
    ```
    The worker launches a detached tmux session and returns immediately.
-7. **Poll status:**
+8. **Poll status:**
    ```bash
    ssh -p 2022 pzagent@<host> 'jq -r .state /workspace/delegations/<run-id>/status.json'
    ```
@@ -94,8 +115,12 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 pzagent@<host> 'collect-results /workspace/delegations/<run-id>' > delegation-result.md
    scp -P 2022 -r pzagent@<host>:/workspace/delegations/<run-id>/result ./result
    ```
-11. **Review medium-depth:** Verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists or a clear reason is given.
-12. **Correction loop for weak results:** Write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch:
+11. **Restore default OpenCode config (cleanup):** remove the temporary per-run whitelist so the next run starts from a known baseline (or re-write a fresh per-run map at next launch).
+   ```bash
+   ssh -p 2022 pzagent@<host> 'rm -f ~/.config/opencode/opencode.json'
+   ```
+12. **Review medium-depth:** Verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists or a clear reason is given.
+13. **Correction loop for weak results:** Write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch:
     ```bash
     scp -P 2022 correction.md pzagent@<host>:/workspace/delegations/<run-id>/correction.md
     ssh -p 2022 pzagent@<host> 'jq ".state=\"correction_requested\" | .correction_rounds=(.correction_rounds+1)" /workspace/delegations/<run-id>/status.json > /tmp/status.$$.json && mv /tmp/status.$$.json /workspace/delegations/<run-id>/status.json'
@@ -134,6 +159,7 @@ Prefer summarized markdown over large raw file copies. When a repository is requ
 4. **Ignoring weak output.** Send the task back for correction rather than pretending it is done.
 5. **Copying huge files.** Summarize context unless exact files are necessary.
 6. **Forgetting active-run warning.** Concurrent runs are allowed only by explicit new invocation, but the user should be warned.
+7. **Forgetting per-run whitelist setup.** Always write a run-specific `~/.config/opencode/opencode.json` `external_directory` map before launch (`/workspace/source/<project-name>/**` and `/workspace/delegations/<run-id>/**` allow, `*` deny). This prevents avoidable permission loops and removes the need to bypass sandbox flow.
 
 ## Verification Checklist
 
@@ -143,6 +169,7 @@ Prefer summarized markdown over large raw file copies. When a repository is requ
 - [ ] `opencode`, `tmux`, `gh`, `jq`, and git are available
 - [ ] OpenCode auth is present and writable for OAuth token refresh; `GITHUB_TOKEN` is present
 - [ ] Run directory exists under `/workspace/delegations/<run-id>`
+- [ ] Per-run OpenCode whitelist is set in `~/.config/opencode/opencode.json` (`external_directory` allows project + run dir, denies `*`)
 - [ ] `status.json` transitions through `ready`/`running` to `done` or `failed`
 - [ ] `12-output-summary.md` contains a free-form result
 - [ ] PR/MR URL is captured for code changes

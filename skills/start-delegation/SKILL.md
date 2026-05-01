@@ -84,7 +84,7 @@ start-delegation worker.local openrouter/claude4.6
    ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'
    ```
    Prefer `/workspace/delegations/follow-delegation <run-id>` for live observation. It should wait for the run directory and log files instead of failing if the worker has not started writing yet. In practice, tailing `10-worker-log.md` and `12-output-summary.md` is often more informative than attaching to tmux, because the launcher may tee output into files while the interactive pane appears idle. Use `tmux attach` only when you specifically need the terminal state; detach with `Ctrl-b` then `d` because `Ctrl-c` can stop the worker process.
-9. **Signal host-side worker refresh when runtime code changes:** If the task changes worker image/bootstrap/runtime code and the running worker must be rebuilt, request it by creating the workspace marker file:
+9. **Signal host-side worker refresh when runtime code changes:** If worker image/bootstrap/runtime code changes and the running worker should be rebuilt, request it by creating the workspace marker file. This can be done by the orchestrator or manually:
    ```bash
    ssh -p 2022 pzagent@<host> 'touch /workspace/update_available'
    ```

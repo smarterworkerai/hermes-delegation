@@ -44,7 +44,7 @@ docker compose logs --tail=100 hermes-worker
 
 ## Host-side update watchdog
 
-If a worker task changes runtime/container code and the running worker must be refreshed, signal it from inside the mounted workspace:
+If worker/container/runtime code changes and the running worker should be refreshed, signal it from inside the mounted workspace. This can be done by the orchestrator or manually:
 
 ```bash
 touch /workspace/update_available

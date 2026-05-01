@@ -53,7 +53,7 @@ Expected success indicators:
 
 ## Worker self-update signal
 
-When a delegated task changes worker/runtime code and the host must rebuild the worker image, the orchestrator or a container-side process can create an empty marker file in the mounted workspace:
+When worker/container/runtime code changes and the host should refresh the worker, the update can be signaled by the orchestrator or manually by creating an empty marker file in the mounted workspace:
 
 ```bash
 touch /workspace/update_available

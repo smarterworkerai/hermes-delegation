@@ -146,3 +146,16 @@ tail -n 120 ~/pzagent_work/worker-update-watchdog.log
 ```
 
 If `update_failed` exists, the watchdog leaves `update_available` in place so the failed refresh request is still visible.
+
+If the watchdog is installed as a system service, also check the unit state:
+
+```bash
+sudo systemctl status hermes-worker-update-watchdog.service
+journalctl -u hermes-worker-update-watchdog.service -n 120
+```
+
+If the service should survive reboots, confirm it is enabled:
+
+```bash
+sudo systemctl is-enabled hermes-worker-update-watchdog.service
+```

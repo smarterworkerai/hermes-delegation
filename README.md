@@ -86,4 +86,52 @@ Useful files in `~/pzagent_work`:
 - `update_failed` — last update attempt failed; marker is left in place
 - `worker-update-watchdog.log` — append-only watchdog log
 
+## Run the watchdog as a reboot-persistent systemd service
+
+Use a system-level service that runs as the host account which owns the repo checkout and mounted workspace. In the examples below, replace paths only if your checkout or workspace live somewhere else.
+
+Create `/etc/systemd/system/hermes-worker-update-watchdog.service`:
+
+```ini
+[Unit]
+Description=Hermes delegation worker update watchdog
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=myuser
+Group=myuser
+WorkingDirectory=/home/myuser/hermes-delegation
+Environment=HOME=/home/myuser
+Environment=REPO_DIR=/home/myuser/hermes-delegation
+Environment=WORKSPACE_DIR=/home/myuser/pzagent_work
+Environment=POLL_INTERVAL=5
+ExecStart=/usr/bin/env bash /home/myuser/hermes-delegation/scripts/worker-update-watchdog.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable hermes-worker-update-watchdog.service
+sudo systemctl start hermes-worker-update-watchdog.service
+```
+
+Inspect it:
+
+```bash
+sudo systemctl status hermes-worker-update-watchdog.service
+journalctl -u hermes-worker-update-watchdog.service -f
+tail -n 120 /home/myuser/pzagent_work/worker-update-watchdog.log
+```
+
+Because the unit is enabled under `multi-user.target`, it starts again automatically after reboot.
+
 See `docs/worker-runtime.md`, `docs/handoff-format.md`, and `docs/troubleshooting.md` for details. Install the Hermes skill from `skills/start-delegation/` into `~/.hermes/skills/autonomous-ai-agents/start-delegation/` or keep it in this project as operational documentation.

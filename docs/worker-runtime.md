@@ -77,6 +77,54 @@ For one-shot processing during testing or from cron/systemd wrappers:
 RUN_ONCE=1 bash scripts/worker-update-watchdog.sh
 ```
 
+### Run it as a reboot-persistent system service
+
+For unattended operation, install the watchdog as a system-level `systemd` service that runs as the host user owning the repo checkout and mounted workspace.
+
+Create `/etc/systemd/system/hermes-worker-update-watchdog.service`:
+
+```ini
+[Unit]
+Description=Hermes delegation worker update watchdog
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+User=myuser
+Group=myuser
+WorkingDirectory=/home/myuser/hermes-delegation
+Environment=HOME=/home/myuser
+Environment=REPO_DIR=/home/myuser/hermes-delegation
+Environment=WORKSPACE_DIR=/home/myuser/pzagent_work
+Environment=POLL_INTERVAL=5
+ExecStart=/usr/bin/env bash /home/myuser/hermes-delegation/scripts/worker-update-watchdog.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Load, enable, and start it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable hermes-worker-update-watchdog.service
+sudo systemctl start hermes-worker-update-watchdog.service
+```
+
+Inspect service state and logs:
+
+```bash
+sudo systemctl status hermes-worker-update-watchdog.service
+journalctl -u hermes-worker-update-watchdog.service -f
+tail -n 120 /home/myuser/pzagent_work/worker-update-watchdog.log
+```
+
+Because the unit is enabled under `multi-user.target`, it starts automatically again after reboot.
+
 ## Smoke checks
 
 ```bash

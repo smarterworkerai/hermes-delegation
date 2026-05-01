@@ -14,6 +14,8 @@ chown pzagent:pzagent "$WORKSPACE" "$DELEGATIONS_ROOT" "$SOURCE_ROOT" /home/pzag
 
 install -m 755 /usr/local/bin/follow-delegation "$DELEGATIONS_ROOT/follow-delegation"
 chown pzagent:pzagent "$DELEGATIONS_ROOT/follow-delegation" 2>/dev/null || true
+install -m 755 /usr/local/bin/manual-update-worker "$WORKSPACE/manual-update-worker.sh"
+chown pzagent:pzagent "$WORKSPACE/manual-update-worker.sh" 2>/dev/null || true
 
 run_as_pzagent 'git config --global user.name "Hermes Agent"'
 run_as_pzagent 'git config --global user.email "smarterworkerai@protonmail.com"'

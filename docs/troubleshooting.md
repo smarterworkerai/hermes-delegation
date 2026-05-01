@@ -124,38 +124,17 @@ rm -rf /workspace/delegations/<old-run-id>
 
 `cleanup-old-runs` is dry-run only and prints candidates.
 
-## Worker update marker detected but nothing happened
+## Worker runtime changes are not visible yet
 
-If `~/pzagent_work/update_available` exists and the worker was not refreshed, verify the host-side watchdog is running from the worker repo checkout:
+If you changed worker/container/runtime code but the running worker still behaves like the old version, refresh it manually from the host repo checkout:
 
 ```bash
-bash scripts/worker-update-watchdog.sh
+bash /workspace/manual-update-worker.sh
 ```
 
-For a single update pass during debugging:
+Then verify the updated worker container is running:
 
 ```bash
-RUN_ONCE=1 bash scripts/worker-update-watchdog.sh
-```
-
-Inspect watchdog state files/logs in `~/pzagent_work`:
-
-```bash
-ls -l ~/pzagent_work/update_* ~/pzagent_work/worker-update-watchdog.log 2>/dev/null || true
-tail -n 120 ~/pzagent_work/worker-update-watchdog.log
-```
-
-If `update_failed` exists, the watchdog leaves `update_available` in place so the failed refresh request is still visible.
-
-If the watchdog is installed as a system service, also check the unit state:
-
-```bash
-sudo systemctl status hermes-worker-update-watchdog.service
-journalctl -u hermes-worker-update-watchdog.service -n 120
-```
-
-If the service should survive reboots, confirm it is enabled:
-
-```bash
-sudo systemctl is-enabled hermes-worker-update-watchdog.service
+docker compose ps
+docker compose logs --tail=120 hermes-worker
 ```

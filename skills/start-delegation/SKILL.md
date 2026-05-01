@@ -84,11 +84,11 @@ start-delegation worker.local openrouter/claude4.6
    ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'
    ```
    Prefer `/workspace/delegations/follow-delegation <run-id>` for live observation. It should wait for the run directory and log files instead of failing if the worker has not started writing yet. In practice, tailing `10-worker-log.md` and `12-output-summary.md` is often more informative than attaching to tmux, because the launcher may tee output into files while the interactive pane appears idle. Use `tmux attach` only when you specifically need the terminal state; detach with `Ctrl-b` then `d` because `Ctrl-c` can stop the worker process.
-9. **Signal host-side worker refresh when runtime code changes:** If worker image/bootstrap/runtime code changes and the running worker should be rebuilt, request it by creating the workspace marker file. This can be done by the orchestrator or manually:
+9. **Request a manual host-side worker refresh when runtime code changes:** If worker image/bootstrap/runtime code, helper scripts, or files expected under `/workspace/delegations` change, the running worker may still be on the old container. In that case, refresh it manually from the host repo checkout:
    ```bash
-   ssh -p 2022 pzagent@<host> 'touch /workspace/update_available'
+   bash /workspace/manual-update-worker.sh
    ```
-   The host-side watchdog should notice `~/pzagent_work/update_available`, run `git pull --ff-only` in the worker repo checkout, rebuild/recreate the worker, and then remove the marker.
+   Do not assume there is a watchdog or marker-based auto-update flow. When reviewing worker-runtime changes, explicitly mention whether a manual rebuild/recreate is required.
 10. **Collect results:**
    ```bash
    ssh -p 2022 pzagent@<host> 'collect-results /workspace/delegations/<run-id>' > delegation-result.md

@@ -42,88 +42,24 @@ docker compose ps
 docker compose logs --tail=100 hermes-worker
 ```
 
-## Host-side update watchdog
+## Manual worker refresh
 
-If worker/container/runtime code changes and the running worker should be refreshed, signal it from inside the mounted workspace. This can be done by the orchestrator or manually:
-
-```bash
-touch /workspace/update_available
-```
-
-That same marker appears on the host as `~/pzagent_work/update_available`.
-A host-side watchdog can react to it and refresh the worker from the repo checkout:
+If worker/container/runtime code changes and the running worker should be refreshed, do it manually from the host repo checkout:
 
 ```bash
-bash scripts/worker-update-watchdog.sh
+bash /workspace/manual-update-worker.sh
 ```
 
-Default behavior when the marker appears:
+What the script does:
 
-1. `git -C <repo> pull --ff-only`
-2. `docker compose up -d --build --force-recreate`
-3. remove the previous worker image by image id if it is no longer used
-4. do not run a global Docker image prune; leave unrelated images alone
-5. remove `update_available`
+1. stop the worker container
+2. remember the previous worker image id
+3. `git pull --ff-only`
+4. rebuild the worker image
+5. start the worker again
+6. remove the previous worker image by id if it is no longer referenced
 
-State files written under `~/pzagent_work`:
-
-- `update_in_progress`
-- `update_failed`
-- `worker-update-watchdog.log`
-
-For one-shot processing during testing or from cron/systemd wrappers:
-
-```bash
-RUN_ONCE=1 bash scripts/worker-update-watchdog.sh
-```
-
-### Run it as a reboot-persistent system service
-
-For unattended operation, install the watchdog as a system-level `systemd` service that runs as the host user owning the repo checkout and mounted workspace.
-
-Create `/etc/systemd/system/hermes-worker-update-watchdog.service`:
-
-```ini
-[Unit]
-Description=Hermes delegation worker update watchdog
-After=network-online.target docker.service
-Wants=network-online.target
-Requires=docker.service
-
-[Service]
-Type=simple
-User=myuser
-Group=myuser
-WorkingDirectory=/home/myuser/hermes-delegation
-Environment=HOME=/home/myuser
-Environment=REPO_DIR=/home/myuser/hermes-delegation
-Environment=WORKSPACE_DIR=/home/myuser/pzagent_work
-Environment=POLL_INTERVAL=5
-ExecStart=/usr/bin/env bash /home/myuser/hermes-delegation/scripts/worker-update-watchdog.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Load, enable, and start it:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable hermes-worker-update-watchdog.service
-sudo systemctl start hermes-worker-update-watchdog.service
-```
-
-Inspect service state and logs:
-
-```bash
-sudo systemctl status hermes-worker-update-watchdog.service
-journalctl -u hermes-worker-update-watchdog.service -f
-tail -n 120 /home/myuser/pzagent_work/worker-update-watchdog.log
-```
-
-Because the unit is enabled under `multi-user.target`, it starts automatically again after reboot.
+This is the preferred mode for this setup: refresh stays explicit, and there is no background watchdog or marker-based auto update flow.
 
 ## Smoke checks
 

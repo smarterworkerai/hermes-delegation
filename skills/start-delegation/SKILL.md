@@ -38,7 +38,8 @@ start-delegation worker.local openrouter/claude4.6
 ## Procedure
 
 1. **Parse host/model.** If the user gives a task along with the invocation, use it as the task brief. Otherwise ask for the task brief.
-2. **Prerequisite checks:**
+
+2. **Run prerequisite checks:**
    ```bash
    ssh -p 2022 -o BatchMode=yes -o ConnectTimeout=8 pzagent@<host> 'echo connected'
    ssh -p 2022 pzagent@<host> 'test -w /workspace && echo workspace-ok'
@@ -52,7 +53,9 @@ start-delegation worker.local openrouter/claude4.6
    ssh -p 2022 pzagent@<host> 'find /workspace/delegations -maxdepth 2 -name status.json -exec jq -r "select(.state==\"running\" or .state==\"ready\") | .run_id" {} + 2>/dev/null || true'
    ```
    If another run is active, show: `Another delegated task is already running on this worker.` Continue only because this skill invocation is explicit.
+
 3. **Create a run id:** `YYYYMMDD-HHMMSS-<task-slug>`.
+
 4. **Create a local handoff directory** using `scripts/prepare_handoff.sh` or equivalent markdown files:
    - `00-task-brief.md`
    - `01-environment.md`
@@ -60,11 +63,13 @@ start-delegation worker.local openrouter/claude4.6
    - `03-acceptance-criteria.md`
    - `04-input-artifacts.md`
    - `status.json`
+
 5. **Upload handoff:**
    ```bash
    ssh -p 2022 pzagent@<host> 'mkdir -p /workspace/delegations/<run-id>'
    scp -P 2022 -r <local-handoff>/* pzagent@<host>:/workspace/delegations/<run-id>/
    ```
+
 6. **Set per-run OpenCode directory whitelist (mandatory):** before launch, write a temporary worker config that allows only the active project and delegation paths, then deny everything else. This prevents `external_directory` permission loops and keeps sandbox boundaries explicit.
    ```bash
    ssh -p 2022 pzagent@<host> 'cat > ~/.config/opencode/opencode.json <<"JSON"
@@ -86,17 +91,20 @@ opencode debug config'
    ```
    - Replace `<project-name>` and `<run-id>` before writing.
    - Verify resolved config includes the expected `external_directory` map.
+
 7. **Launch worker job:**
    ```bash
    ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model>'
    ```
    The worker launches a detached tmux session and returns immediately.
+
 8. **Poll status:**
    ```bash
    ssh -p 2022 pzagent@<host> 'jq -r .state /workspace/delegations/<run-id>/status.json'
    ```
    Terminal states are `done` and `failed`.
-8. **Inspect a live run when requested:**
+
+9. **Inspect a live run when requested:**
    ```bash
    ssh -p 2022 pzagent@<host> 'tmux ls'
    ssh -p 2022 pzagent@<host> '/workspace/delegations/follow-delegation <run-id>'
@@ -105,28 +113,36 @@ opencode debug config'
    ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'
    ```
    Prefer `/workspace/delegations/follow-delegation <run-id>` for live observation. It should wait for the run directory and log files instead of failing if the worker has not started writing yet. In practice, tailing `10-worker-log.md` and `12-output-summary.md` is often more informative than attaching to tmux, because the launcher may tee output into files while the interactive pane appears idle. Use `tmux attach` only when you specifically need the terminal state; detach with `Ctrl-b` then `d` because `Ctrl-c` can stop the worker process.
-9. **Request a manual host-side worker refresh when runtime code changes:** If worker image/bootstrap/runtime code, helper scripts, or files expected under `/workspace/delegations` change, the running worker may still be on the old container. In that case, refresh it manually from the host repo checkout:
-   ```bash
-   bash /workspace/manual-update-worker.sh
-   ```
-   Do not assume there is a watchdog or marker-based auto-update flow. When reviewing worker-runtime changes, explicitly mention whether a manual rebuild/recreate is required.
+
 10. **Collect results:**
    ```bash
    ssh -p 2022 pzagent@<host> 'collect-results /workspace/delegations/<run-id>' > delegation-result.md
    scp -P 2022 -r pzagent@<host>:/workspace/delegations/<run-id>/result ./result
    ```
-11. **Restore default OpenCode config (cleanup):** remove the temporary per-run whitelist so the next run starts from a known baseline (or re-write a fresh per-run map at next launch).
+
+11. **Orchestrator validation gate (mandatory after step 9/10):** run at least one concrete check/test against the worker output before accepting the run (for example smoke test command, lint/build, or acceptance-criteria script). If anything fails or looks inconsistent, trigger a correction round instead of finalizing.
+
+12. **Optional host-side worker refresh when runtime code changes:** if worker image/bootstrap/runtime code, helper scripts, or files expected under `/workspace/delegations` changed, the running worker may still be on the old container. In that case, refresh it manually from the host repo checkout:
+   ```bash
+   bash /workspace/manual-update-worker.sh
+   ```
+   Do not assume there is a watchdog or marker-based auto-update flow. When reviewing worker-runtime changes, explicitly mention whether a manual rebuild/recreate is required.
+
+13. **Restore default OpenCode config (cleanup):** remove the temporary per-run whitelist so the next run starts from a known baseline (or re-write a fresh per-run map at next launch).
    ```bash
    ssh -p 2022 pzagent@<host> 'rm -f ~/.config/opencode/opencode.json'
    ```
-12. **Review medium-depth:** Verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists or a clear reason is given.
-13. **Correction loop for weak results:** Write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch:
-    ```bash
-    scp -P 2022 correction.md pzagent@<host>:/workspace/delegations/<run-id>/correction.md
-    ssh -p 2022 pzagent@<host> 'jq ".state=\"correction_requested\" | .correction_rounds=(.correction_rounds+1)" /workspace/delegations/<run-id>/status.json > /tmp/status.$$.json && mv /tmp/status.$$.json /workspace/delegations/<run-id>/status.json'
-    ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model> /workspace/delegations/<run-id>/correction.md'
-    ```
-13. **Final report to user:** Include task attempted, host/model, run directory, PR/MR URL, changes, verification, correction rounds, remaining risks, and next step.
+
+14. **Review medium-depth:** verify the result matches the task brief, acceptance criteria were addressed, important commands ran, logs are consistent, and a PR/MR exists (or there is a clear reason why not).
+
+15. **Correction loop for weak/failed validation results:** write correction instructions to `correction.md`, upload it, increment/record correction state, and relaunch.
+   ```bash
+   scp -P 2022 correction.md pzagent@<host>:/workspace/delegations/<run-id>/correction.md
+   ssh -p 2022 pzagent@<host> 'jq ".state=\"correction_requested\" | .correction_rounds=(.correction_rounds+1)" /workspace/delegations/<run-id>/status.json > /tmp/status.$$.json && mv /tmp/status.$$.json /workspace/delegations/<run-id>/status.json'
+   ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model> /workspace/delegations/<run-id>/correction.md'
+   ```
+
+16. **Final report to user:** include task attempted, host/model, run directory, PR/MR URL, checks/tests executed, correction rounds, remaining risks, and next step.
 
 ## Handoff contract
 

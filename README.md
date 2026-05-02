@@ -24,15 +24,14 @@ ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 
 This section explains **what this project is for** and **how to use it** at a high level.
 
-It uses the PlantUML proxy rendering approach (`plantuml-markdown` style), so diagrams are directly visible on GitHub.
-
 ### What problem this solves
 
-`hermes-delegation` provides an always-on SSH worker (`pzagent`) that Hermes can delegate implementation tasks to.
+`hermes-delegation` provides an always-on containerized remote SSH worker (`pzagent`) that Hermes can delegate implementation tasks to.
 
 Core goals:
 
 - keep delegation execution isolated from the orchestrator host
+- keep delegation execution isolated from the remote worker host machine
 - standardize handoff format and run artifacts
 - make delegated runs observable/reviewable
 - keep repository work under `/workspace/source/<project-name>`
@@ -62,12 +61,6 @@ Core goals:
    - `12-output-summary.md`
    - `result/` artifacts
 
-### Editing diagrams
-
-- Source files live under `docs/diagrams/*.puml`
-- GitHub-rendered images in this doc resolve through PlantUML proxy + `raw.githubusercontent.com`
-- `cache=no` is used so the latest committed `.puml` is rendered
-
 ### Reading order for deeper detail
 
 - Runtime specifics: `docs/worker-runtime.md`
@@ -95,6 +88,3 @@ This keeps worker refresh explicit and avoids background auto-update behavior.
 
 See `docs/worker-runtime.md`, `docs/handoff-format.md`, and `docs/troubleshooting.md` for details. Install the Hermes skill from `skills/start-delegation/` into `~/.hermes/skills/autonomous-ai-agents/start-delegation/` or keep it in this project as operational documentation.
 
-## Documentation
-
-- [High-level overview with PlantUML diagrams](docs/high-level-overview.md)

@@ -71,3 +71,7 @@ What the script does:
 This keeps worker refresh explicit and avoids background auto-update behavior.
 
 See `docs/worker-runtime.md`, `docs/handoff-format.md`, and `docs/troubleshooting.md` for details. Install the Hermes skill from `skills/start-delegation/` into `~/.hermes/skills/autonomous-ai-agents/start-delegation/` or keep it in this project as operational documentation.
+
+## Documentation
+
+- [High-level overview with PlantUML diagrams](docs/high-level-overview.md)

@@ -18,11 +18,11 @@ Core goals:
 
 ## Where this fits in the workflow
 
-![System Context](diagrams/system-context.svg)
+[![System Context](diagrams/system-context.svg)](diagrams/system-context.svg)
 
 ## Typical runtime components
 
-![Runtime Components](diagrams/runtime-components.svg)
+[![Runtime Components](diagrams/runtime-components.svg)](diagrams/runtime-components.svg)
 
 ## How to use it (operator flow)
 

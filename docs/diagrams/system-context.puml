@@ -1,0 +1,60 @@
+@startuml
+' =============================================================
+' Hermes Delegation - System Context
+' =============================================================
+title Hermes Delegation — System Context (High-Level)
+
+skinparam backgroundColor #FFFFFF
+skinparam dpi 160
+skinparam shadowing false
+skinparam defaultFontName Inter
+skinparam defaultFontSize 13
+skinparam roundcorner 14
+skinparam ArrowColor #2D4B73
+skinparam ArrowThickness 1
+skinparam sequence {
+  MessageAlign center
+  ArrowColor #2D4B73
+  LifeLineBorderColor #6E8FB5
+  LifeLineBackgroundColor #F7FAFF
+  ParticipantBorderColor #3B5B84
+  ParticipantBackgroundColor #EEF4FF
+  ActorBorderColor #3B5B84
+  ActorBackgroundColor #EEF4FF
+}
+
+actor "User" as User #EAF5FF
+participant "Hermes\nOrchestrator" as Hermes #EAF5FF
+participant "start-delegation\nskill" as Skill #EEF7E8
+participant "GitHub" as GitHub #FFF4E8
+
+box "Worker Host" #F7FAFF
+  participant "OpenSSH\n(port 2022)" as SSH #F0F7FF
+  participant "run-delegated-task" as Runner #F0F7FF
+  participant "OpenCode CLI" as OpenCode #F0F7FF
+  database "/workspace/source" as Source #F9FCFF
+  collections "/workspace/delegations/<run-id>" as Runs #F9FCFF
+end box
+
+autonumber "<b>[000]"
+
+User -> Hermes : Requests implementation task
+Hermes -> Skill : Prepares task handoff bundle
+Skill -> SSH : Connects to pzagent@host:2022
+SSH -> Runner : Starts delegated run
+Runner -> OpenCode : Runs prompt + constraints
+OpenCode -> Source : Clone/update repository
+OpenCode -> GitHub : Push branch / open PR (optional)
+Runner -> Runs : Persist status + logs + artifacts
+Skill -> Hermes : Returns run summary + state
+Hermes -> User : Reports outcome / asks correction
+
+legend right
+|= Flow output |
+| status.json |
+| 11-commands.md |
+| 12-output-summary.md |
+| result/* artifacts |
+endlegend
+
+@enduml

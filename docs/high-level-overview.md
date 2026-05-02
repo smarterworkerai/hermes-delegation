@@ -2,6 +2,8 @@
 
 This document explains **what this project is for** and **how to use it** at a high level.
 
+It uses the PlantUML proxy rendering approach (`plantuml-markdown` style), so diagrams are directly visible on GitHub.
+
 ## What problem this solves
 
 `hermes-delegation` provides an always-on SSH worker (`pzagent`) that Hermes can delegate implementation tasks to.
@@ -16,93 +18,15 @@ Core goals:
 
 ## Where this fits in the workflow
 
-```plantuml
-@startuml
-title Hermes Delegation: System Context (High-Level)
-
-actor User
-participant "Hermes Orchestrator" as Hermes
-participant "start-delegation skill" as Skill
-node "Worker Host" as Host {
-  node "hermes-worker container" as Worker {
-    participant "OpenSSH (port 2022)" as SSH
-    participant "run-delegated-task" as Runner
-    participant "OpenCode CLI" as OpenCode
-  }
-  database "/workspace/source" as Source
-  folder "/workspace/delegations/<run-id>" as Runs
-}
-participant "GitHub" as GitHub
-
-User -> Hermes : Request implementation task
-Hermes -> Skill : Prepare delegation handoff
-Skill -> SSH : Connect to pzagent@host:2022
-SSH -> Runner : Start delegated run
-Runner -> OpenCode : Execute task prompt
-OpenCode -> Source : Clone/update target repository
-OpenCode -> GitHub : Push branch / create PR (optional)
-Runner -> Runs : Write status + logs + result artifacts
-Skill -> Hermes : Return summary + run status
-Hermes -> User : Report outcome / request corrections
-
-@enduml
-```
+![System Context](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.puml)
 
 ## Typical runtime components
 
-```plantuml
-@startuml
-title Runtime Components Inside hermes-worker
-
-package "hermes-worker container" {
-  [OpenSSH server]
-  [pzagent user (UID/GID 1000)]
-  [OpenCode CLI]
-  [gh + git + tmux + jq + rg]
-  [run-delegated-task scripts]
-}
-
-folder "Mounted from host" {
-  [~/.pzagent/authorized_keys]
-  [~/.local/share/opencode/auth.json]
-  [~/pzagent_work -> /workspace]
-  [~/pzagent_work/source -> /workspace/source]
-  [~/.pzagent/.worker-env]
-}
-
-[OpenSSH server] --> [run-delegated-task scripts]
-[run-delegated-task scripts] --> [OpenCode CLI]
-[OpenCode CLI] --> [gh + git + tmux + jq + rg]
-[run-delegated-task scripts] --> [~/pzagent_work -> /workspace]
-[OpenCode CLI] --> [~/pzagent_work/source -> /workspace/source]
-
-@enduml
-```
+![Runtime Components](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.puml)
 
 ## How to use it (operator flow)
 
-```plantuml
-@startuml
-title Operator Flow: Setup -> Delegate -> Review
-
-start
-:Prepare host paths and env;
-:Start worker container;
-:Verify SSH + runtime checks;
-:Run start-delegation <host> <model>;
-:Worker executes task and writes artifacts;
-if (Result quality acceptable?) then (yes)
-  :Accept result;
-  :Optionally merge PR/MR;
-  stop
-else (no)
-  :Request correction round;
-  :Re-run delegated loop;
-  stop
-endif
-
-@enduml
-```
+![Operator Flow](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.puml)
 
 ## Minimal usage checklist
 
@@ -115,6 +39,12 @@ endif
    - `11-commands.md`
    - `12-output-summary.md`
    - `result/` artifacts
+
+## Editing diagrams
+
+- Source files live under `docs/diagrams/*.puml`
+- GitHub-rendered images in this doc resolve through PlantUML proxy + `raw.githubusercontent.com`
+- `cache=no` is used so the latest committed `.puml` is rendered
 
 ## Reading order for deeper detail
 

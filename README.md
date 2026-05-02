@@ -39,15 +39,15 @@ Core goals:
 
 ### Where this fits in the workflow
 
-[![System Context](docs/diagrams/system-context.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.png)
+[![System Context](docs/diagrams/system-context.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/main/docs/diagrams/system-context.png)
 
 ### Typical runtime components
 
-[![Runtime Components](docs/diagrams/runtime-components.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.png)
+[![Runtime Components](docs/diagrams/runtime-components.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/main/docs/diagrams/runtime-components.png)
 
 ### How to use it (operator flow)
 
-[![Operator Flow](docs/diagrams/operator-flow.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.png)
+[![Operator Flow](docs/diagrams/operator-flow.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/main/docs/diagrams/operator-flow.png)
 
 ### Minimal usage checklist
 

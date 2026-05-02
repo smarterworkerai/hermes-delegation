@@ -71,44 +71,25 @@ start-delegation worker.local openrouter/claude4.6
    ```
 
 6. **Set per-run OpenCode directory whitelist (mandatory):** before launch, write a temporary worker config that allows only the active project and delegation paths, then deny everything else. This prevents `external_directory` permission loops and keeps sandbox boundaries explicit.
-   ```bash
-   ssh -p 2022 pzagent@<host> 'cat > ~/.config/opencode/opencode.json <<"JSON"
-{
-  "agent": {
-    "build": {
-      "permission": {
-        "external_directory": {
-          "/workspace/source/<project-name>/**": "allow",
-          "/workspace/delegations/<run-id>/**": "allow",
-          "*": "deny"
-        }
-      }
-    }
-  }
-}
-JSON
-opencode debug config'
-   ```
+   - Write config: `ssh -p 2022 pzagent@<host> 'cat > ~/.config/opencode/opencode.json <<"JSON"`
+   - Config body:
+     `{"agent":{"build":{"permission":{"external_directory":{"/workspace/source/<project-name>/**":"allow","/workspace/delegations/<run-id>/**":"allow","*":"deny"}}}}}`
+   - Close and verify: `JSON` then `opencode debug config'`
    - Replace `<project-name>` and `<run-id>` before writing.
    - Verify resolved config includes the expected `external_directory` map.
 
 7. **Launch worker job:** run `ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model>'`.
    The worker launches a detached tmux session and returns immediately.
 
-8. **Poll status:**
-   ```bash
-   ssh -p 2022 pzagent@<host> 'jq -r .state /workspace/delegations/<run-id>/status.json'
-   ```
+8. **Poll status:** run `ssh -p 2022 pzagent@<host> 'jq -r .state /workspace/delegations/<run-id>/status.json'`.
    Terminal states are `done` and `failed`.
 
 9. **Inspect a live run when requested:**
-   ```bash
-   ssh -p 2022 pzagent@<host> 'tmux ls'
-   ssh -p 2022 pzagent@<host> '/workspace/delegations/follow-delegation <run-id>'
-   ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/10-worker-log.md'
-   ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/12-output-summary.md'
-   ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'
-   ```
+   - `ssh -p 2022 pzagent@<host> 'tmux ls'`
+   - `ssh -p 2022 pzagent@<host> '/workspace/delegations/follow-delegation <run-id>'`
+   - `ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/10-worker-log.md'`
+   - `ssh -p 2022 pzagent@<host> 'tail -n 120 /workspace/delegations/<run-id>/12-output-summary.md'`
+   - `ssh -t -p 2022 pzagent@<host> 'tmux attach -t delegation-<run-id>'`
    Prefer `/workspace/delegations/follow-delegation <run-id>` for live observation. It should wait for the run directory and log files instead of failing if the worker has not started writing yet. In practice, tailing `10-worker-log.md` and `12-output-summary.md` is often more informative than attaching to tmux, because the launcher may tee output into files while the interactive pane appears idle. Use `tmux attach` only when you specifically need the terminal state; detach with `Ctrl-b` then `d` because `Ctrl-c` can stop the worker process.
 
 10. **Collect results:**

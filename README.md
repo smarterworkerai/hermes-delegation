@@ -20,36 +20,59 @@ ssh -p 2022 pzagent@<host> 'echo connected && pwd && git config --global --list'
 ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ```
 
-## Validated smoke test
+## High-Level Overview
 
-The implementation was validated end-to-end with a real `start-delegation` run against the always-on SSH worker.
+This section explains **what this project is for** and **how to use it** at a high level.
 
-Validated run summary:
+It uses the PlantUML proxy rendering approach (`plantuml-markdown` style), so diagrams are directly visible on GitHub.
 
-- host: `127.0.0.1`
-- model: `openai/gpt-5.5`
-- run id: `smoke-20260430-161200-start-delegation`
-- final state: `done`
-- result: `exit_code=0`
-- correction rounds: `0`
+### What problem this solves
 
-Recommended validation flow after setup:
+`hermes-delegation` provides an always-on SSH worker (`pzagent`) that Hermes can delegate implementation tasks to.
 
-```bash
-chmod 600 ~/.ssh/<worker-key>
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'echo CONNECTED && whoami && pwd'
-start-delegation <host> openai/gpt-5.5
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'ls -td /workspace/delegations/* | head -1'
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'jq . /workspace/delegations/<run-id>/status.json'
-```
+Core goals:
 
-Expected success indicators:
+- keep delegation execution isolated from the orchestrator host
+- standardize handoff format and run artifacts
+- make delegated runs observable/reviewable
+- keep repository work under `/workspace/source/<project-name>`
+- keep run logs and outputs under `/workspace/delegations/<run-id>`
 
-- SSH login succeeds as `pzagent`
-- the run directory is created under `/workspace/delegations/<run-id>`
-- source repositories are cloned under `/workspace/source/<project-name>`
-- `status.json` reaches `state: done`
-- the run produces `11-commands.md`, `12-output-summary.md`, and `result/notes/smoke-proof.txt`
+### Where this fits in the workflow
+
+![System Context](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.puml)
+
+### Typical runtime components
+
+![Runtime Components](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.puml)
+
+### How to use it (operator flow)
+
+![Operator Flow](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.puml)
+
+### Minimal usage checklist
+
+1. Set host prerequisites (`~/.pzagent`, `~/pzagent_work/source`, `.worker-env`).
+2. Start worker (`docker compose up -d --build`).
+3. Verify connectivity (`ssh -p 2022 pzagent@<host>`, `check-worker-runtime`).
+4. Run delegation from Hermes (`start-delegation <host> <model>`).
+5. Review run outputs in `/workspace/delegations/<run-id>/`:
+   - `status.json`
+   - `11-commands.md`
+   - `12-output-summary.md`
+   - `result/` artifacts
+
+### Editing diagrams
+
+- Source files live under `docs/diagrams/*.puml`
+- GitHub-rendered images in this doc resolve through PlantUML proxy + `raw.githubusercontent.com`
+- `cache=no` is used so the latest committed `.puml` is rendered
+
+### Reading order for deeper detail
+
+- Runtime specifics: `docs/worker-runtime.md`
+- Handoff structure: `docs/handoff-format.md`
+- Failure handling: `docs/troubleshooting.md`
 
 ## Manual worker refresh
 

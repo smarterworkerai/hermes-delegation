@@ -20,36 +20,52 @@ ssh -p 2022 pzagent@<host> 'echo connected && pwd && git config --global --list'
 ssh -p 2022 pzagent@<host> 'check-worker-runtime'
 ```
 
-## Validated smoke test
+## High-Level Overview
 
-The implementation was validated end-to-end with a real `start-delegation` run against the always-on SSH worker.
+This section explains **what this project is for** and **how to use it** at a high level.
 
-Validated run summary:
+### What problem this solves
 
-- host: `127.0.0.1`
-- model: `openai/gpt-5.5`
-- run id: `smoke-20260430-161200-start-delegation`
-- final state: `done`
-- result: `exit_code=0`
-- correction rounds: `0`
+`hermes-delegation` provides an always-on containerized remote SSH worker (`pzagent`) that Hermes can delegate implementation tasks to.
 
-Recommended validation flow after setup:
+Core goals:
 
-```bash
-chmod 600 ~/.ssh/<worker-key>
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'echo CONNECTED && whoami && pwd'
-start-delegation <host> openai/gpt-5.5
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'ls -td /workspace/delegations/* | head -1'
-ssh -i ~/.ssh/<worker-key> -p 2022 pzagent@<host> 'jq . /workspace/delegations/<run-id>/status.json'
-```
+- keep delegation execution isolated from the orchestrator host
+- keep delegation execution isolated from the remote worker host machine
+- standardize handoff format and run artifacts
+- make delegated runs observable/reviewable
+- keep repository work under `/workspace/source/<project-name>`
+- keep run logs and outputs under `/workspace/delegations/<run-id>`
 
-Expected success indicators:
+### Where this fits in the workflow
 
-- SSH login succeeds as `pzagent`
-- the run directory is created under `/workspace/delegations/<run-id>`
-- source repositories are cloned under `/workspace/source/<project-name>`
-- `status.json` reaches `state: done`
-- the run produces `11-commands.md`, `12-output-summary.md`, and `result/notes/smoke-proof.txt`
+[![System Context](docs/diagrams/system-context.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.png)
+
+### Typical runtime components
+
+[![Runtime Components](docs/diagrams/runtime-components.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.png)
+
+### How to use it (operator flow)
+
+[![Operator Flow](docs/diagrams/operator-flow.svg)](https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.png)
+
+### Minimal usage checklist
+
+1. Set host prerequisites (`~/.pzagent`, `~/pzagent_work/source`, `.worker-env`).
+2. Start worker (`docker compose up -d --build`).
+3. Verify connectivity (`ssh -p 2022 pzagent@<host>`, `check-worker-runtime`).
+4. Run delegation from Hermes (`start-delegation <host> <model>`).
+5. Review run outputs in `/workspace/delegations/<run-id>/`:
+   - `status.json`
+   - `11-commands.md`
+   - `12-output-summary.md`
+   - `result/` artifacts
+
+### Reading order for deeper detail
+
+- Runtime specifics: `docs/worker-runtime.md`
+- Handoff structure: `docs/handoff-format.md`
+- Failure handling: `docs/troubleshooting.md`
 
 ## Manual worker refresh
 
@@ -71,3 +87,4 @@ What the script does:
 This keeps worker refresh explicit and avoids background auto-update behavior.
 
 See `docs/worker-runtime.md`, `docs/handoff-format.md`, and `docs/troubleshooting.md` for details. Install the Hermes skill from `skills/start-delegation/` into `~/.hermes/skills/autonomous-ai-agents/start-delegation/` or keep it in this project as operational documentation.
+

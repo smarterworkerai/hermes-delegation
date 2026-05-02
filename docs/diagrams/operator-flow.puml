@@ -1,0 +1,53 @@
+@startuml
+' =============================================================
+' Hermes Delegation - Operator Usage Flow
+' =============================================================
+title Hermes Delegation — Operator Usage Flow
+
+skinparam backgroundColor #FFFFFF
+skinparam dpi 160
+skinparam shadowing false
+skinparam defaultFontName Inter
+skinparam defaultFontSize 13
+skinparam roundcorner 14
+skinparam ArrowColor #2D4B73
+skinparam ArrowThickness 1
+skinparam activity {
+  BackgroundColor #EEF4FF
+  BorderColor #3E5F8A
+  DiamondBackgroundColor #EAF7ED
+  DiamondBorderColor #3D7A4D
+  StartColor #5B8FD9
+  EndColor #5B8FD9
+  FontColor #1E3552
+}
+
+start
+
+:Prepare host prerequisites
+(authorized_keys, .worker-env,
+/workspace mounts);
+
+:Start worker
+`docker compose up -d --build`;
+
+:Verify runtime
+(SSH + `check-worker-runtime`);
+
+:Run delegation
+`start-delegation <host> <model>`;
+
+:Worker executes task and
+writes run artifacts;
+
+if (Result quality acceptable?) then (yes)
+  :Accept result;
+  :Optionally merge PR/MR;
+  stop
+else (no)
+  :Request correction round;
+  :Run another delegated loop;
+  stop
+endif
+
+@enduml

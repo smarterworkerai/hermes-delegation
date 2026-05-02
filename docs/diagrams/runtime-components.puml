@@ -1,0 +1,63 @@
+@startuml
+' =============================================================
+' Hermes Delegation - Runtime Components
+' =============================================================
+title Hermes Delegation — Worker Runtime Components
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam dpi 160
+skinparam shadowing false
+skinparam defaultFontName Inter
+skinparam defaultFontSize 13
+skinparam roundcorner 14
+skinparam ArrowColor #365A88
+skinparam ArrowThickness 1
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam RectangleBorderColor #3E5F8A
+skinparam RectangleBackgroundColor #EEF4FF
+skinparam FolderBorderColor #6A8EBB
+skinparam FolderBackgroundColor #F7FAFF
+
+rectangle "Operator / Hermes" as Operator #EAF5FF
+
+node "Worker Host" as Host #F7FAFF {
+  folder "Host-mounted inputs" as Mounts {
+    component "~/.pzagent/authorized_keys" as Keys #FDFEFF
+    component "~/.local/share/opencode/auth.json" as Auth #FDFEFF
+    component "~/.pzagent/.worker-env" as Env #FDFEFF
+    component "~/pzagent_work -> /workspace" as WS #FDFEFF
+    component "~/pzagent_work/source\n-> /workspace/source" as SRCM #FDFEFF
+  }
+
+  package "hermes-worker container" as Worker #EEF7E8 {
+    component "OpenSSH server" as SSH #F8FCF6
+    component "pzagent (UID/GID 1000)" as Agent #F8FCF6
+    component "run-delegated-task scripts" as Scripts #F8FCF6
+    component "OpenCode CLI" as OpenCode #F8FCF6
+    component "gh / git / tmux / jq / rg" as Tooling #F8FCF6
+
+    database "/workspace/source/<project>" as Source #FBFFFA
+    collections "/workspace/delegations/<run-id>" as Runs #FBFFFA
+  }
+}
+
+cloud "GitHub" as GitHub #FFF4E8
+
+Operator --> SSH : SSH command / start-delegation
+SSH --> Agent : login shell
+Agent --> Scripts : invoke run
+Scripts --> OpenCode : execute task
+OpenCode --> Tooling : vcs + shell tooling
+OpenCode --> Source : code changes
+Scripts --> Runs : write logs/status
+OpenCode --> GitHub : push branch / create PR
+
+Keys --> SSH
+Auth --> OpenCode
+Env --> Scripts
+WS --> Runs
+SRCM --> Source
+
+@enduml

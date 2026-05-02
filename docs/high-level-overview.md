@@ -18,15 +18,15 @@ Core goals:
 
 ## Where this fits in the workflow
 
-![System Context](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.puml)
+![System Context](diagrams/system-context.svg)
 
 ## Typical runtime components
 
-![Runtime Components](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.puml)
+![Runtime Components](diagrams/runtime-components.svg)
 
 ## How to use it (operator flow)
 
-![Operator Flow](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.puml)
+![Operator Flow](diagrams/operator-flow.svg)
 
 ## Minimal usage checklist
 
@@ -40,11 +40,11 @@ Core goals:
    - `12-output-summary.md`
    - `result/` artifacts
 
-## Editing diagrams
+## Diagram source of truth
 
 - Source files live under `docs/diagrams/*.puml`
-- GitHub-rendered images in this doc resolve through PlantUML proxy + `raw.githubusercontent.com`
-- `cache=no` is used so the latest committed `.puml` is rendered
+- This document embeds pre-rendered `*.svg` files from `docs/diagrams/`
+- If a `.puml` file changes, regenerate and commit the corresponding `.svg`
 
 ## Reading order for deeper detail
 

@@ -39,15 +39,15 @@ Core goals:
 
 ### Where this fits in the workflow
 
-![System Context](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/system-context.puml)
+![System Context](docs/diagrams/system-context.svg)
 
 ### Typical runtime components
 
-![Runtime Components](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/runtime-components.puml)
+![Runtime Components](docs/diagrams/runtime-components.svg)
 
 ### How to use it (operator flow)
 
-![Operator Flow](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/smarterworkerai/hermes-delegation/feature/plantuml-high-level-docs/docs/diagrams/operator-flow.puml)
+![Operator Flow](docs/diagrams/operator-flow.svg)
 
 ### Minimal usage checklist
 
@@ -60,6 +60,12 @@ Core goals:
    - `11-commands.md`
    - `12-output-summary.md`
    - `result/` artifacts
+
+### Diagram source of truth
+
+- PlantUML sources stay in `docs/diagrams/*.puml`
+- Committed `*.svg` files are pre-rendered outputs used by GitHub markdown
+- If any `.puml` changes, regenerate the matching `.svg` files before commit
 
 ### Reading order for deeper detail
 

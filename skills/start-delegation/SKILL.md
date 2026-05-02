@@ -92,10 +92,7 @@ opencode debug config'
    - Replace `<project-name>` and `<run-id>` before writing.
    - Verify resolved config includes the expected `external_directory` map.
 
-7. **Launch worker job:**
-   ```bash
-   ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model>'
-   ```
+7. **Launch worker job:** run `ssh -p 2022 pzagent@<host> 'run-delegated-task /workspace/delegations/<run-id> <model>'`.
    The worker launches a detached tmux session and returns immediately.
 
 8. **Poll status:**

@@ -47,7 +47,16 @@ OpenCode -> Source : Clone/update repository
 OpenCode -> GitHub : Push branch / open PR (optional)
 Runner -> Runs : Persist status + logs + artifacts
 Skill -> Hermes : Returns run summary + state
-Hermes -> User : Reports outcome / asks correction
+Hermes -> Hermes : Review + validation checks
+alt Validation failed
+  Hermes -> Skill : Request correction round
+  Skill -> SSH : Relaunch with correction.md
+  SSH -> Runner : Executes correction pass
+  Runner -> Runs : Updates status + artifacts
+  Skill -> Hermes : Returns corrected summary
+else Validation passed
+  Hermes -> User : Reports outcome
+end
 
 legend right
 |= Flow output |

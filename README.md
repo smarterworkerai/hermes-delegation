@@ -2,6 +2,8 @@
 
 Always-on SSH-accessible OpenCode worker container for Hermes orchestration.
 
+Licensed under the [MIT License](LICENSE).
+
 ## Quick start
 
 ```bash

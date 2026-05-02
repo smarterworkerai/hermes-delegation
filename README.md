@@ -61,12 +61,6 @@ Core goals:
    - `12-output-summary.md`
    - `result/` artifacts
 
-### Diagram source of truth
-
-- PlantUML sources stay in `docs/diagrams/*.puml`
-- Committed `*.svg` files are pre-rendered outputs used by GitHub markdown
-- If any `.puml` changes, regenerate the matching `.svg` files before commit
-
 ### Reading order for deeper detail
 
 - Runtime specifics: `docs/worker-runtime.md`
